@@ -1,0 +1,8 @@
+{
+  "name": "InternForge",
+  "description": "India's most immersive training and internship portal for engineering students, powered by real-world projects and interactive learning tracks.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
