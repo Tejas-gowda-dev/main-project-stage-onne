@@ -10,15 +10,17 @@ import { UserSession } from '../types';
 
 interface CertificateProps {
   user?: UserSession | null;
+  onProgressUpdate?: (updatedUser: UserSession) => void;
 }
 
-export default function CertificateCard({ user }: CertificateProps) {
+export default function CertificateCard({ user, onProgressUpdate }: CertificateProps) {
   const [studentName, setStudentName] = useState(() => user?.name?.toUpperCase() || 'ROHAN SHARMA');
   const [courseTitle, setCourseTitle] = useState('Autonomous Robotics & AI Integration Track');
-  const [issueDate, setIssueDate] = useState('May 22, 2026');
+  const [issueDate, setIssueDate] = useState('May 23, 2026');
   const [certID, setCertID] = useState('IF-ROB-99482');
   const [isGenerating, setIsGenerating] = useState(false);
   const [showToast, setShowToast] = useState(false);
+  const [isSolving, setIsSolving] = useState(false);
 
   const certContainerRef = useRef<HTMLDivElement>(null);
   const coreCertRef = useRef<HTMLDivElement>(null);
@@ -29,6 +31,44 @@ export default function CertificateCard({ user }: CertificateProps) {
       setStudentName(user.name.toUpperCase());
     }
   }, [user]);
+
+  useEffect(() => {
+    try {
+      const options: Intl.DateTimeFormatOptions = { year: 'numeric', month: 'long', day: 'numeric' };
+      setIssueDate(new Date().toLocaleDateString(undefined, options));
+    } catch (e) {
+      console.error('Timezone auto-fetch error:', e);
+    }
+  }, []);
+
+  const handleAutoSolveTrack = async () => {
+    if (!user) return;
+    setIsSolving(true);
+    try {
+      const allNodes = ['w1-2', 'w3-5', 'w6-8', 'w9-10', 'w11-12'];
+      const res = await fetch("/api/tracker/progress", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId: user.id,
+          completedNodes: allNodes,
+          activeNodeId: 'w11-12',
+          xpGained: 2500,
+          labsCompleted: 5,
+        })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (onProgressUpdate && data.user) {
+          onProgressUpdate(data.user);
+        }
+      }
+    } catch (e) {
+      console.error('Dev Auto-solver error:', e);
+    } finally {
+      setIsSolving(false);
+    }
+  };
 
   useEffect(() => {
     if (!coreCertRef.current) return;
@@ -152,20 +192,22 @@ function replaceModernColors(str: string): string {
 
       const element = coreCertRef.current;
       const canvas = await html2canvas(element, {
-        scale: 2.5, // High resolution capture
+        scale: 2.0, // Stable and highly-performant crisp scale
         useCORS: true,
         backgroundColor: '#0A0A0F',
         logging: false,
       });
 
       const imgData = canvas.toDataURL('image/png');
+      const pWidth = 842;
+      const pHeight = 595;
       const pdf = new jsPDF({
         orientation: 'landscape',
         unit: 'px',
-        format: [canvas.width / 2.5, canvas.height / 2.5],
+        format: [pWidth, pHeight],
       });
 
-      pdf.addImage(imgData, 'PNG', 0, 0, canvas.width / 2.5, canvas.height / 2.5);
+      pdf.addImage(imgData, 'PNG', 0, 0, pWidth, pHeight);
       pdf.save(`InternForge-Certificate-${studentName.replace(/\s+/g, '-')}.pdf`);
 
       setShowToast(true);
@@ -209,56 +251,95 @@ function replaceModernColors(str: string): string {
           <div className="flex items-center gap-2">
             <PenTool className="w-4 h-4 text-cyber-cyan" />
             <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-300 font-display">
-              Certificate Live Preview Customizer
+              Certificate Official Credentials Registry
             </h4>
           </div>
-          <span className="text-[10px] text-gray-500 font-mono">EDIT_FIELDS_ACTIVE</span>
+          <span className="text-[10px] text-gray-500 font-mono">REGISTRY_INTEGRITY_SECURE</span>
         </div>
 
+        {/* Completion Program Gating Notification block */}
+        {(() => {
+          const completedNodesCount = user?.completedNodes?.length || 0;
+          const isCompleted = completedNodesCount >= 5;
+          if (!isCompleted) {
+            return (
+              <div className="md:col-span-3 p-4 rounded-xl bg-amber-500/[0.03] border border-amber-500/20 text-gray-300 flex flex-col sm:flex-row items-center justify-between gap-4 font-sans text-left mt-1 mb-2">
+                <div className="flex items-start gap-3">
+                  <span className="text-xl shrink-0">🔒</span>
+                  <div className="text-xs leading-relaxed">
+                    <strong className="text-amber-400 block mb-0.5">ACADEMIC CREDENTIAL GATING ACTIVE</strong>
+                    Student has completed <strong className="text-white font-mono">{completedNodesCount}/5</strong> milestones of the specialized program track. Verification of all 5 laboratory sequences is required to unlock official PDF downloads.
+                  </div>
+                </div>
+                
+                <button
+                  type="button"
+                  onClick={handleAutoSolveTrack}
+                  disabled={isSolving}
+                  className="px-4 py-2 font-mono text-[10px] font-extrabold text-center uppercase tracking-wider rounded-lg border border-amber-500/30 bg-amber-500/10 text-amber-300 hover:bg-amber-500/25 hover:border-amber-500/50 transition-all cursor-pointer whitespace-nowrap self-stretch sm:self-auto flex items-center justify-center gap-1.5"
+                >
+                  {isSolving ? (
+                    <>
+                      <RefreshCw className="w-3 h-3 animate-spin text-amber-300" />
+                      SYNCHRONIZING_TRACK...
+                    </>
+                  ) : (
+                    '⚡ DEPLOY AUTO-SOLVE RUNNER'
+                  )}
+                </button>
+              </div>
+            );
+          }
+          return null;
+        })()}
+
         <div>
-          <label className="block text-xs text-gray-400 font-medium mb-1.5">Recipient Full Name</label>
+          <div className="flex items-center justify-between mb-1.5">
+            <label className="block text-xs text-gray-400 font-medium">Recipient Full Name</label>
+            <span className="text-[9px] font-mono text-cyan-400 uppercase flex items-center gap-1 select-none">
+              🔒 Locked to Profile
+            </span>
+          </div>
           <input
             type="text"
             value={studentName}
-            onChange={(e) => setStudentName(e.target.value.toUpperCase())}
-            maxLength={28}
-            className="w-full px-3 py-2 text-xs rounded-lg bg-black/45 focus:outline-none focus:border-indigo-500/50 text-white border border-white/10 tracking-wide font-medium"
+            disabled
+            readOnly
+            className="w-full px-3 py-2 text-xs rounded-lg bg-black/25 text-gray-400 border border-white/5 tracking-wide font-semibold cursor-not-allowed select-none focus:outline-none"
             placeholder="Recipient Full Name"
           />
         </div>
 
         <div>
-          <label className="block text-xs text-gray-400 font-medium mb-1.5">Specialization Track Program</label>
-          <select
+          <div className="flex items-center justify-between mb-1.5">
+            <label className="block text-xs text-gray-400 font-medium">Specialization Track Program</label>
+            <span className="text-[9px] font-mono text-cyan-400 uppercase flex items-center gap-1 select-none">
+              🔒 Locked Track
+            </span>
+          </div>
+          <input
+            type="text"
             value={courseTitle}
-            onChange={(e) => {
-              setCourseTitle(e.target.value);
-              const codes: Record<string, string> = {
-                'Autonomous Robotics & AI Integration Track': 'IF-ROB-99482',
-                'Deep Learning & Edge Computing Deployment': 'IF-ML-88320',
-                'Industrial IoT & RTOS Kernel Firmware Module': 'IF-EMB-77203',
-                'Full-Stack Distributed Systems Engineering Track': 'IF-CSE-11024',
-                'Automotive Design & Static Structural FEA Track': 'IF-FEA-41038',
-              };
-              setCertID(codes[e.target.value] || 'IF-GEN-55102');
-            }}
-            className="w-full px-3 py-2 text-xs rounded-lg bg-black/45 focus:outline-none focus:border-indigo-500/50 text-white border border-white/10 font-medium"
-          >
-            <option>Autonomous Robotics & AI Integration Track</option>
-            <option>Deep Learning & Edge Computing Deployment</option>
-            <option>Industrial IoT & RTOS Kernel Firmware Module</option>
-            <option>Full-Stack Distributed Systems Engineering Track</option>
-            <option>Automotive Design & Static Structural FEA Track</option>
-          </select>
+            disabled
+            readOnly
+            className="w-full px-3 py-2 text-xs rounded-lg bg-black/25 text-gray-400 border border-white/5 tracking-wide font-semibold cursor-not-allowed select-none focus:outline-none"
+            placeholder="Specialization Track Program"
+          />
         </div>
 
         <div>
-          <label className="block text-xs text-gray-400 font-medium mb-1.5">Date of Award</label>
+          <div className="flex items-center justify-between mb-1.5">
+            <label className="block text-xs text-gray-400 font-medium">Date of Award</label>
+            <span className="text-[9px] font-mono text-cyan-400 uppercase flex items-center gap-1 select-none">
+              🔒 Auto-Fetched
+            </span>
+          </div>
           <input
             type="text"
             value={issueDate}
-            onChange={(e) => setIssueDate(e.target.value)}
-            className="w-full px-3 py-2 text-xs rounded-lg bg-black/45 focus:outline-none focus:border-indigo-500/50 text-white border border-white/10 tracking-wide font-medium"
+            disabled
+            readOnly
+            className="w-full px-3 py-2 text-xs rounded-lg bg-black/25 text-gray-400 border border-white/5 tracking-wide font-semibold cursor-not-allowed select-none focus:outline-none"
             placeholder="Date of Award"
           />
         </div>
@@ -385,35 +466,67 @@ function replaceModernColors(str: string): string {
       </div>
 
       {/* Action export links row */}
-      <div className="flex flex-col sm:flex-row gap-4 mt-8 z-10 w-full justify-center items-center">
-        <GlowButton
-          variant="gradient"
-          onClick={handleDownloadPDF}
-          disabled={isGenerating}
-          className="text-xs py-3.5 px-7 w-full sm:w-56"
-        >
-          {isGenerating ? (
-            <>
-              <RefreshCw className="w-4 h-4 text-white animate-spin" />
-              Compiling Files...
-            </>
-          ) : (
-            <>
-              <Download className="w-4 h-4 text-white" />
-              Download PDF Core File
-            </>
-          )}
-        </GlowButton>
+      {(() => {
+        const completedNodesCount = user?.completedNodes?.length || 0;
+        const isCompleted = completedNodesCount >= 5;
 
-        <GlowButton
-          variant="outline"
-          onClick={handleShareLinkedIn}
-          className="text-xs py-3.5 px-7 border-indigo-400/20 hover:border-indigo-400/50 w-full sm:w-56"
-        >
-          <Linkedin className="w-4 h-4 text-cyan-400" />
-          Publish on LinkedIn
-        </GlowButton>
-      </div>
+        if (isCompleted) {
+          return (
+            <div className="flex flex-col sm:flex-row gap-4 mt-8 z-10 w-full justify-center items-center">
+              <GlowButton
+                variant="gradient"
+                onClick={handleDownloadPDF}
+                disabled={isGenerating}
+                className="text-xs py-3.5 px-7 w-full sm:w-56"
+              >
+                {isGenerating ? (
+                  <>
+                    <RefreshCw className="w-4 h-4 text-white animate-spin" />
+                    Compiling Files...
+                  </>
+                ) : (
+                  <>
+                    <Download className="w-4 h-4 text-white" />
+                    Download PDF Core File
+                  </>
+                )}
+              </GlowButton>
+
+              <GlowButton
+                variant="outline"
+                onClick={handleShareLinkedIn}
+                className="text-xs py-3.5 px-7 border-indigo-400/20 hover:border-indigo-400/50 w-full sm:w-56"
+              >
+                <Linkedin className="w-4 h-4 text-cyan-400" />
+                Publish on LinkedIn
+              </GlowButton>
+            </div>
+          );
+        }
+
+        return (
+          <div className="flex flex-col items-center gap-3.5 mt-8 z-10 w-full">
+            <div className="flex flex-col sm:flex-row gap-4 w-full justify-center items-center">
+              <button
+                disabled
+                className="text-xs font-mono font-bold py-3.5 px-7 w-full sm:w-56 rounded-xl bg-white/5 border border-white/5 text-gray-500 cursor-not-allowed flex items-center justify-center gap-2 select-none"
+              >
+                🔒 Download PDF Locked
+              </button>
+
+              <button
+                disabled
+                className="text-xs font-mono font-bold py-3.5 px-7 w-full sm:w-56 rounded-xl bg-white/5 border border-white/5 text-gray-500 cursor-not-allowed flex items-center justify-center gap-2 select-none"
+              >
+                🔒 LinkedIn Share Locked
+              </button>
+            </div>
+            <span className="text-[11px] text-gray-500 font-mono tracking-wide text-center">
+              Progress: <strong className="text-amber-400">{completedNodesCount}/5</strong> milestones verified. Complete the learning track to activate downloads.
+            </span>
+          </div>
+        );
+      })()}
     </div>
   );
 }

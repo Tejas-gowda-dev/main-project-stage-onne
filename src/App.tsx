@@ -508,7 +508,7 @@ export default function App() {
                     </p>
                   </div>
 
-                  <CertificateCard user={user} />
+                  <CertificateCard user={user} onProgressUpdate={handleProgressUpdate} />
                 </div>
               ) : (
                 <SecureGatedGate onLoginClick={handleLoginClick} tabLabel="Verified Program Certificates" />

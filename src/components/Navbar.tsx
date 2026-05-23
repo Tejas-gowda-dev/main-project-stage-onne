@@ -101,7 +101,7 @@ export default function Navbar({ currentTab, setCurrentTab, onApplyClick, user, 
           </div>
 
           {/* Desktop Nav Actions */}
-          <nav className="hidden md:flex items-center gap-1.5 bg-white/5 border border-white/5 p-1 rounded-xl backdrop-blur-md">
+          <nav className="hidden lg:flex items-center gap-1.5 bg-white/5 border border-white/5 p-1 rounded-xl backdrop-blur-md">
             {navItems.map((item) => {
               const active = currentTab === item.id;
               return (
@@ -129,7 +129,7 @@ export default function Navbar({ currentTab, setCurrentTab, onApplyClick, user, 
           </nav>
 
           {/* Side action apply CTA */}
-          <div className="hidden md:flex items-center gap-4">
+          <div className="hidden lg:flex items-center gap-4">
             {user ? (
               <div className="flex items-center gap-2">
                 <button 
@@ -163,7 +163,7 @@ export default function Navbar({ currentTab, setCurrentTab, onApplyClick, user, 
           </div>
 
           {/* Hamburger Mobile Toggle */}
-          <div className="flex md:hidden">
+          <div className="flex lg:hidden">
             <button
               onClick={() => setIsMobileOpen(!isMobileOpen)}
               className="p-2 rounded-lg bg-white/5 text-gray-300 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
@@ -183,7 +183,7 @@ export default function Navbar({ currentTab, setCurrentTab, onApplyClick, user, 
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.35, ease: 'easeInOut' }}
-            className="md:hidden absolute top-full left-0 right-0 bg-cyber-bg/95 border-b border-indigo-500/10 backdrop-blur-2xl py-6 px-4 space-y-4 shadow-xl overflow-hidden"
+            className="lg:hidden absolute top-full left-0 right-0 bg-cyber-bg/95 border-b border-indigo-500/10 backdrop-blur-2xl py-6 px-4 space-y-4 shadow-xl overflow-hidden"
           >
             <div className="grid grid-cols-1 gap-2.5">
               {navItems.map((item, idx) => {
