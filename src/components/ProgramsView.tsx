@@ -199,7 +199,7 @@ export default function ProgramsView({ onEnrollClick }: ProgramsViewProps) {
               <button
                 key={domain}
                 onClick={() => setActiveFilter(domain)}
-                className={`relative px-4 py-2 text-xs font-semibold uppercase tracking-wider font-display rounded-xl transition-all duration-300 cursor-none select-none border ${
+                className={`relative px-4 py-2 text-xs font-semibold uppercase tracking-wider font-display rounded-xl transition-all duration-300 cursor-pointer select-none border ${
                   active
                     ? 'text-white bg-indigo-500/10 border-indigo-500/40 shadow-[0_0_15px_rgba(99,102,241,0.25)]'
                     : 'text-gray-400 bg-white/5 border-white/5 hover:text-gray-100 hover:bg-white/10'

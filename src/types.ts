@@ -63,3 +63,17 @@ export interface RoadmapNode {
   skillsAcquired: string[];
   projects: string[];
 }
+
+export interface UserSession {
+  id: string;
+  email: string;
+  name: string;
+  college?: string;
+  level: number;
+  xp: number;
+  streak: number;
+  completedNodes: string[];
+  activeNodeId: string;
+  badges: string[];
+  labsCompleted: number;
+}

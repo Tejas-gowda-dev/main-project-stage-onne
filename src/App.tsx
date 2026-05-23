@@ -2,6 +2,9 @@ import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Award, Sparkles, Cpu, BookOpen, Briefcase, GraduationCap, CheckCircle, Terminal, HelpCircle, ArrowRight } from 'lucide-react';
 
+import { UserSession } from './types';
+import AuthModal from './components/AuthModal';
+
 // Import Custom Core Components
 import Navbar from './components/Navbar';
 import HeroSection from './components/HeroSection';
@@ -16,11 +19,45 @@ import ProgramsView from './components/ProgramsView';
 import DashboardView from './components/DashboardView';
 import TrackView from './components/TrackView';
 import GlowButton from './components/GlowButton';
+import SecureGatedGate from './components/SecureGatedGate';
+import AdminPanel from './components/AdminPanel';
 
 export default function App() {
   const [currentTab, setCurrentTab] = useState<string>('home');
   const dotRef = useRef<HTMLDivElement>(null);
   const ringRef = useRef<HTMLDivElement>(null);
+
+  const [user, setUser] = useState<UserSession | null>(() => {
+    try {
+      const saved = localStorage.getItem('internforge-user');
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
+  const [isAuthOpen, setIsAuthOpen] = useState(false);
+
+  const handleLoginClick = () => {
+    setIsAuthOpen(true);
+  };
+
+  const handleProgressUpdate = (updatedUser: UserSession) => {
+    setUser(updatedUser);
+    localStorage.setItem('internforge-user', JSON.stringify(updatedUser));
+  };
+
+  const handleAuthSuccess = (authenticatedUser: UserSession) => {
+    setUser(authenticatedUser);
+    localStorage.setItem('internforge-user', JSON.stringify(authenticatedUser));
+  };
+
+  const handleLogout = () => {
+    setUser(null);
+    localStorage.removeItem('internforge-user');
+    setCurrentTab('home');
+    window.location.hash = '#/home';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   // Parse Initial Hash routing on mount
   useEffect(() => {
@@ -28,7 +65,7 @@ export default function App() {
       const hash = window.location.hash;
       if (hash) {
         const route = hash.replace(/^#\/?/, '');
-        if (['home', 'programs', 'dashboard', 'track', 'certificate'].includes(route)) {
+        if (['home', 'programs', 'dashboard', 'track', 'certificate', 'admin'].includes(route)) {
           setCurrentTab(route);
         }
       }
@@ -127,6 +164,9 @@ export default function App() {
           window.location.hash = `#/${tab}`;
         }}
         onApplyClick={handleApplyNowAction}
+        user={user}
+        onLoginClick={handleLoginClick}
+        onLogout={handleLogout}
       />
 
       {/* 4. Tab Routing Page Switcher with smooth Exit/Entry scaling */}
@@ -216,6 +256,111 @@ export default function App() {
                 </div>
               </section>
 
+              {/* Student Profile Provisioning Benefits Segment (Business Logic Breakdown) */}
+              <section className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto select-none relative bg-gradient-to-b from-transparent via-cyan-500/5 to-transparent rounded-3xl my-8">
+                <div className="absolute inset-0 pointer-events-none" />
+                
+                <div className="text-center mb-16">
+                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/20 mb-3">
+                    <Sparkles className="w-3.5 h-3.5 text-cyber-cyan" />
+                    <span className="text-[10px] sm:text-xs font-mono font-bold text-cyan-300 tracking-widest uppercase">COHORT_PROVISIONS</span>
+                  </div>
+                  <h3 className="text-2xl sm:text-4.5xl font-display font-extrabold text-white tracking-tight leading-none mb-4">
+                    Why Create an Engineering Profile?
+                  </h3>
+                  <p className="text-sm sm:text-base text-gray-450 max-w-2xl mx-auto font-sans">
+                    Establishing your verified student identity compiles and updates continuous MongoDB telemetry. Here is exactly what you receive upon profile orchestration:
+                  </p>
+                </div>
+
+                {/* Grid model breakdown representing real corporate-level perks */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+                  
+                  {/* Benefit A */}
+                  <div className="rounded-2xl bg-black/40 border border-white/5 p-6 flex flex-col justify-between h-64 hover:border-cyan-400/30 transition-all group duration-300">
+                    <div>
+                      <div className="w-10 h-10 rounded-xl bg-cyan-400/10 border border-cyan-400/20 flex items-center justify-center text-cyan-400 mb-4 shadow-[0_0_10px_rgba(6,182,212,0.15)]">
+                        <Cpu className="w-5 h-5" />
+                      </div>
+                      <h4 className="font-display font-bold text-base text-white mb-2">Workspace Terminals</h4>
+                      <p className="text-xs text-gray-400 font-sans leading-relaxed">
+                        Spin up sandbox VM kernel simulations, compile test configurations (FreeRTOS, ROS 2), and synchronize joint parameters.
+                      </p>
+                    </div>
+                    <span className="text-[10px] font-mono text-cyan-400/50">PROVISION::TERMINAL_VM</span>
+                  </div>
+
+                  {/* Benefit B */}
+                  <div className="rounded-2xl bg-black/40 border border-white/5 p-6 flex flex-col justify-between h-64 hover:border-indigo-400/30 transition-all group duration-300">
+                    <div>
+                      <div className="w-10 h-10 rounded-xl bg-indigo-400/10 border border-indigo-400/20 flex items-center justify-center text-indigo-400 mb-4 shadow-[0_0_10px_rgba(99,102,241,0.15)]">
+                        <Terminal className="w-5 h-5" />
+                      </div>
+                      <h4 className="font-display font-bold text-base text-white mb-2">MongoDB Continuous Telemetry</h4>
+                      <p className="text-xs text-gray-400 font-sans leading-relaxed">
+                        Track lab completions, dynamic XP milestones, weekly chapters, and persistent badges secured under standard databases.
+                      </p>
+                    </div>
+                    <span className="text-[10px] font-mono text-indigo-400/50">PROVISION::STATUS_STORE</span>
+                  </div>
+
+                  {/* Benefit C */}
+                  <div className="rounded-2xl bg-black/40 border border-white/5 p-6 flex flex-col justify-between h-64 hover:border-purple-400/30 transition-all group duration-300">
+                    <div>
+                      <div className="w-10 h-10 rounded-xl bg-purple-400/10 border border-purple-400/20 flex items-center justify-center text-purple-400 mb-4 shadow-[0_0_10px_rgba(139,92,246,0.15)]">
+                        <Award className="w-5 h-5" />
+                      </div>
+                      <h4 className="font-display font-bold text-base text-white mb-2">5 Holo Achievement Seals</h4>
+                      <p className="text-xs text-gray-400 font-sans leading-relaxed">
+                        Acrue micro-credentials as you clear embedded tests, validating real technical capabilities for recruiters.
+                      </p>
+                    </div>
+                    <span className="text-[10px] font-mono text-purple-400/50">PROVISION::HOLO_BADGES</span>
+                  </div>
+
+                  {/* Benefit D */}
+                  <div className="rounded-2xl bg-black/40 border border-white/5 p-6 flex flex-col justify-between h-64 hover:border-amber-400/30 transition-all group duration-300">
+                    <div>
+                      <div className="w-10 h-10 rounded-xl bg-amber-400/10 border border-amber-500/25 flex items-center justify-center text-amber-500 mb-4 shadow-[0_0_10px_rgba(245,158,11,0.15)]">
+                        <GraduationCap className="w-5 h-5" />
+                      </div>
+                      <h4 className="font-display font-bold text-base text-white mb-2">Verified Vector Credentials</h4>
+                      <p className="text-xs text-gray-400 font-sans leading-relaxed">
+                        Custom-print high-contrast verification certificates linked with authentic database references immediately.
+                      </p>
+                    </div>
+                    <span className="text-[10px] font-mono text-amber-500/50">PROVISION::PRINTABLE_CERT</span>
+                  </div>
+
+                  {/* Benefit E */}
+                  <div className="rounded-2xl bg-black/40 border border-white/5 p-6 flex flex-col justify-between h-64 col-md-span-1 md:col-span-2 hover:border-emerald-400/30 transition-all group duration-300">
+                    <div>
+                      <div className="w-10 h-10 rounded-xl bg-emerald-400/10 border border-emerald-400/20 flex items-center justify-center text-emerald-400 mb-4 shadow-[0_0_10px_rgba(16,185,129,0.15)]">
+                        <HelpCircle className="w-5 h-5" />
+                      </div>
+                      <h4 className="font-display font-bold text-base text-white mb-2">Direct 1-on-1 Mentor Gateway (Architect Calendar Sync)</h4>
+                      <p className="text-xs text-gray-450 font-sans leading-relaxed">
+                        Registered students gain immediate access to our expert mentors scheduling portal. Synchronize your calendar directly to book interactive system design loops and resume verification checks with elite team leads.
+                      </p>
+                    </div>
+                    <span className="text-[10px] font-mono text-emerald-400/50">PROVISION::OFFICE_HOURS_GATEWAY</span>
+                  </div>
+
+                </div>
+
+                {/* Sub-CTA Register Button */}
+                {!user && (
+                  <div className="flex flex-col items-center justify-center pt-2">
+                    <p className="text-xs text-gray-500 mb-4 font-mono uppercase tracking-widest">
+                      // READY TO JOIN 12,000+ CAFFEINE-UE COHORT CADETS IN DEPLOYMENT?
+                    </p>
+                    <GlowButton onClick={handleLoginClick} variant="gradient" className="w-full sm:w-72 h-12 text-xs">
+                      Provision Engineering Profile Now &rarr;
+                    </GlowButton>
+                  </div>
+                )}
+              </section>
+
               {/* Infinite scrolling Testimonial Slider */}
               <section className="py-12">
                 <div className="text-center mb-6">
@@ -250,14 +395,18 @@ export default function App() {
               exit="exit"
               transition={{ duration: 0.35 }}
             >
-              {/* PROGRAMS CATALOG VIEW */}
-              <ProgramsView onEnrollClick={(p) => {
-                // Instantly sync hash router and focus student tab to simulate enrollment!
-                setCurrentTab('dashboard');
-                window.location.hash = '#/dashboard';
-                // scroll to topmost coordinate of student dashboard
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-              }} />
+              {/* PROGRAMS CATALOG VIEW WITH GATE PROTECTION */}
+              {user ? (
+                <ProgramsView onEnrollClick={(p) => {
+                  // Instantly sync hash router and focus student tab to simulate enrollment!
+                  setCurrentTab('dashboard');
+                  window.location.hash = '#/dashboard';
+                  // scroll to topmost coordinate of student dashboard
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }} />
+              ) : (
+                <SecureGatedGate onLoginClick={handleLoginClick} tabLabel="Programs Catalog" />
+              )}
             </motion.div>
           )}
 
@@ -270,8 +419,16 @@ export default function App() {
               exit="exit"
               transition={{ duration: 0.35 }}
             >
-              {/* STUDENT DASHBOARD VIEWS */}
-              <DashboardView />
+              {/* STUDENT DASHBOARD VIEWS WITH GATE PROTECTION */}
+              {user ? (
+                <DashboardView
+                  user={user}
+                  onLoginClick={handleLoginClick}
+                  onLogout={handleLogout}
+                />
+              ) : (
+                <SecureGatedGate onLoginClick={handleLoginClick} tabLabel="Student Dashboard" />
+              )}
             </motion.div>
           )}
 
@@ -284,8 +441,42 @@ export default function App() {
               exit="exit"
               transition={{ duration: 0.35 }}
             >
-              {/* ROADMAP TRACK NODES */}
-              <TrackView />
+              {/* ROADMAP TRACK NODES WITH GATE PROTECTION */}
+              {user ? (
+                <TrackView
+                  user={user}
+                  onProgressUpdate={handleProgressUpdate}
+                  onLoginClick={handleLoginClick}
+                />
+              ) : (
+                <SecureGatedGate onLoginClick={handleLoginClick} tabLabel="Weekly Milestones Roadmap" />
+              )}
+            </motion.div>
+          )}
+
+          {currentTab === 'admin' && (
+            <motion.div
+              key="admin"
+              variants={pageVariants}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              transition={{ duration: 0.35 }}
+            >
+              {user && (user.email === 'tejasgowda.lk@gmail.com' || user.email === 'admin@internforge.com') ? (
+                <AdminPanel onBackToClass={() => {
+                  setCurrentTab('dashboard');
+                  window.location.hash = '#/dashboard';
+                }} />
+              ) : (
+                <div className="pt-32 pb-16 text-center select-none font-mono">
+                  <div className="inline-flex p-3 rounded-full bg-red-500/10 border border-red-500/20 mb-4 text-red-500">
+                    🔒 GATE_PROTECTION
+                  </div>
+                  <h3 className="text-white font-display font-black uppercase text-sm tracking-wider">ROOT_ADMIN_ROLE_REQUIRED</h3>
+                  <p className="text-xs text-gray-500 mt-2 font-sans">You must be logged in as admin to access this system panel.</p>
+                </div>
+              )}
             </motion.div>
           )}
 
@@ -299,25 +490,29 @@ export default function App() {
               transition={{ duration: 0.35 }}
               className="pt-24 pb-16 px-4"
             >
-              {/* CERTIFICATE PREVIEW EXP */}
-              <div className="max-w-7xl mx-auto flex flex-col items-center">
-                <div className="text-center mb-10 select-none">
-                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 mb-4 shadow-[0_0_15px_rgba(245,158,11,0.15)]">
-                    <Award className="w-4 h-4 text-amber-500 animate-spin" style={{ animationDuration: '6s' }} />
-                    <span className="text-xs font-mono font-bold text-amber-300 tracking-widest uppercase">
-                      Credential Verification Gateway
-                    </span>
+              {/* CERTIFICATE PREVIEW EXP WITH GATE PROTECTION */}
+              {user ? (
+                <div className="max-w-7xl mx-auto flex flex-col items-center">
+                  <div className="text-center mb-10 select-none">
+                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 mb-4 shadow-[0_0_15px_rgba(245,158,11,0.15)]">
+                      <Award className="w-4 h-4 text-amber-500 animate-spin" style={{ animationDuration: '6s' }} />
+                      <span className="text-xs font-mono font-bold text-amber-300 tracking-widest uppercase">
+                        Credential Verification Gateway
+                      </span>
+                    </div>
+                    <h2 className="text-3xl md:text-5xl font-display font-extrabold text-white tracking-tight mb-2">
+                      Verified Program Certificate
+                    </h2>
+                    <p className="text-sm text-gray-400 max-w-xl mx-auto font-sans">
+                      Customize your award credentials and generate a high-contrast vector print directly to your computer profile.
+                    </p>
                   </div>
-                  <h2 className="text-3xl md:text-5xl font-display font-extrabold text-white tracking-tight mb-2">
-                    Verified Program Certificate
-                  </h2>
-                  <p className="text-sm text-gray-400 max-w-xl mx-auto font-sans">
-                    Customize your award credentials and generate a high-contrast vector print directly to your computer profile.
-                  </p>
-                </div>
 
-                <CertificateCard />
-              </div>
+                  <CertificateCard user={user} />
+                </div>
+              ) : (
+                <SecureGatedGate onLoginClick={handleLoginClick} tabLabel="Verified Program Certificates" />
+              )}
             </motion.div>
           )}
         </AnimatePresence>
@@ -333,6 +528,13 @@ export default function App() {
           </div>
         </div>
       </footer>
+
+      {/* Auth Modal Container Popup */}
+      <AuthModal
+        isOpen={isAuthOpen}
+        onClose={() => setIsAuthOpen(false)}
+        onSuccess={handleAuthSuccess}
+      />
     </div>
   );
 }

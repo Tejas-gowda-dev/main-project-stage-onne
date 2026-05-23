@@ -134,15 +134,7 @@
   }
 }
 
-/* Custom Interactive Cursor (hidden on touch devices) */
-@media (pointer: fine) {
-  body {
-    cursor: none;
-  }
-  a, button, select, input, [role="button"], .interactive {
-    cursor: none !important;
-  }
-}
+/* Custom Interactive Cursor removed to ensure native system mouse cursor is fully visible and functionally stable in sandboxed preview environments */
 
 * {
   box-sizing: border-box;

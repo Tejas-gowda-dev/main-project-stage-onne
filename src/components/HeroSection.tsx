@@ -176,7 +176,7 @@ export default function HeroSection({ onApplyClick, onExploreClick }: HeroSectio
         animate={{ y: [0, 8, 0] }}
         transition={{ repeat: Infinity, duration: 1.8, ease: 'easeInOut' }}
         onClick={onExploreClick}
-        className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10 flex flex-col items-center gap-1.5 cursor-none"
+        className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10 flex flex-col items-center gap-1.5 cursor-pointer"
       >
         <span className="text-[10px] font-mono tracking-widest text-cyber-cyan uppercase font-bold text-center">
           scroll index

@@ -1,13 +1,54 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ROADMAP_NODES } from '../data';
-import { RoadmapNode } from '../types';
-import { Lock, Check, Play, Circle, Calendar, Trophy, ChevronRight, X, Sparkles, BookOpen, Layers } from 'lucide-react';
+import { RoadmapNode, UserSession } from '../types';
+import { Lock, Check, Play, Circle, Calendar, Trophy, ChevronRight, X, Sparkles, BookOpen, Layers, Terminal as TermIcon, ShieldEllipsis, AlertCircle } from 'lucide-react';
 import GlowButton from './GlowButton';
 
-export default function TrackView() {
-  const [selectedNode, setSelectedNode] = useState<RoadmapNode | null>(null);
+interface TrackViewProps {
+  user: UserSession | null;
+  onProgressUpdate: (updatedUser: UserSession) => void;
+  onLoginClick: () => void;
+}
+
+export default function TrackView({ user, onProgressUpdate, onLoginClick }: TrackViewProps) {
+  const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const [hoveredWeek, setHoveredWeek] = useState<string | null>(null);
+  const [isSimulatingTerminal, setIsSimulatingTerminal] = useState(false);
+  const [terminalLogs, setTerminalLogs] = useState<string[]>([]);
+  const [simSuccess, setSimSuccess] = useState(false);
+
+  // Fallback guest user session
+  const activeUser = user || {
+    id: 'guest-user',
+    email: 'student@internforge.com',
+    name: 'Guest Cadet',
+    level: 1,
+    xp: 250,
+    streak: 1,
+    completedNodes: [] as string[],
+    activeNodeId: 'w1-2',
+    badges: ['b1'],
+    labsCompleted: 0
+  };
+
+  const getDynamicNodes = (): RoadmapNode[] => {
+    const completedSet = new Set(activeUser.completedNodes);
+    let nextFound = false;
+    return ROADMAP_NODES.map((node) => {
+      if (completedSet.has(node.id)) {
+        return { ...node, status: 'completed' };
+      }
+      if (!nextFound) {
+        nextFound = true;
+        return { ...node, status: 'in-progress' };
+      }
+      return { ...node, status: 'locked' };
+    });
+  };
+
+  const dynamicNodes = getDynamicNodes();
+  const selectedNode = dynamicNodes.find(n => n.id === selectedNodeId) || null;
 
   // SVG node coordinates for a curved serpentine cyber roadmap line (responsive offsets)
   const responsiveCoordinates = [
@@ -45,6 +86,73 @@ export default function TrackView() {
       .join(' ');
   };
 
+  const runTerminalSimulation = async () => {
+    if (!selectedNode) return;
+    setIsSimulatingTerminal(true);
+    setSimSuccess(false);
+    setTerminalLogs([]);
+
+    const steps = [
+      `[SYS_INIT] Spinning up sandboxed virtual kernel environment...`,
+      `[NET_PROBE] Connected securely to InternForge DB pipeline at port 3000`,
+      `[LOAD_SOURCE] Parsing and verifying source: "${selectedNode.projects[0]}"...`,
+      `[COMPILE] Running standard compiler: gcc-embedded v12.2.0 -O3 -Wall`,
+      `[TEST_RUN] Exercising joint constraint validation test cases [1/3]... PACKED`,
+      `[TEST_RUN] Testing digital filtration signal thresholds [2/3]... SUCCESS`,
+      `[TEST_RUN] Matching target telemetry coordinates check [3/3]... PASSED`,
+      `[SYNC_DB] Shipping completed status update to MongoDB backend server...`,
+    ];
+
+    for (let i = 0; i < steps.length; i++) {
+      await new Promise(resolve => setTimeout(resolve, 600 + Math.random() * 300));
+      setTerminalLogs(prev => [...prev, steps[i]]);
+    }
+
+    try {
+      const nextCompletedNodes = [...activeUser.completedNodes];
+      if (!nextCompletedNodes.includes(selectedNode.id)) {
+        nextCompletedNodes.push(selectedNode.id);
+      }
+
+      const res = await fetch("/api/tracker/progress", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId: activeUser.id,
+          completedNodes: nextCompletedNodes,
+          activeNodeId: selectedNode.id === 'w1-2' ? 'w3-5' : selectedNode.id === 'w3-5' ? 'w6-8' : selectedNode.id === 'w6-8' ? 'w9-10' : 'w11-12',
+          xpGained: selectedNode.xpReward,
+          labsCompleted: activeUser.labsCompleted + 1,
+          badgeAwarded: selectedNode.id === 'w3-5' ? 'b4' : undefined
+        })
+      });
+
+      if (!res.ok) {
+        throw new Error("Unable to synchronize progress with backend.");
+      }
+
+      const data = await res.json();
+      setTerminalLogs(prev => [...prev, `[SUCCESS] Database synchronized successfully! +${selectedNode.xpReward} XP awarded.`]);
+      setSimSuccess(true);
+      if (onProgressUpdate && data.user) {
+        onProgressUpdate(data.user);
+      }
+    } catch (err: any) {
+      setTerminalLogs(prev => [...prev, `[WARNING] Persistent connection unavailable. Progress saved locally in fallback memory storage.`]);
+      // Local fallback in case guest or network is slow
+      const fallbackUser: UserSession = {
+        ...activeUser,
+        completedNodes: [...activeUser.completedNodes, selectedNode.id],
+        xp: activeUser.xp + selectedNode.xpReward,
+        labsCompleted: activeUser.labsCompleted + 1,
+        badges: selectedNode.id === 'w3-5' ? [...activeUser.badges, 'b4'] : activeUser.badges
+      };
+      setSimSuccess(true);
+      onProgressUpdate(fallbackUser);
+    }
+  };
+
+
   return (
     <div className="w-full flex flex-col pt-24 pb-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto z-10 font-sans relative select-none">
       
@@ -72,13 +180,13 @@ export default function TrackView() {
         </div>
 
         <div className="flex gap-1 overflow-x-auto pb-1 max-w-full scrollbar-thin">
-          {ROADMAP_NODES.map((node) => (
+          {dynamicNodes.map((node) => (
             <div
               key={node.id}
               onMouseEnter={() => setHoveredWeek(node.id)}
               onMouseLeave={() => setHoveredWeek(null)}
-              onClick={() => setSelectedNode(node)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium cursor-none transition-all duration-200 border whitespace-nowrap select-none ${
+              onClick={() => setSelectedNodeId(node.id)}
+              className={`px-3 py-1.5 rounded-lg text-xs font-medium cursor-pointer transition-all duration-200 border whitespace-nowrap select-none ${
                 node.status === 'completed'
                   ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-300'
                   : node.status === 'in-progress'
@@ -123,7 +231,7 @@ export default function TrackView() {
 
           {/* Interactive Absolute Nodes */}
           <div className="absolute inset-0 w-full h-full z-10">
-            {ROADMAP_NODES.map((node, i) => {
+            {dynamicNodes.map((node, i) => {
               const pt = responsiveCoordinates[i] || { x: 100, y: 100 };
               const nodeStyle = getNodeColor(node.status);
               
@@ -136,8 +244,8 @@ export default function TrackView() {
                   <motion.div
                     whileHover={{ scale: 1.15 }}
                     transition={{ type: 'spring', stiffness: 450, damping: 15 }}
-                    onClick={() => setSelectedNode(node)}
-                    className={`w-12 h-12 rounded-full border-2 cursor-none flex items-center justify-center transition-all duration-300 relative ${nodeStyle}`}
+                    onClick={() => setSelectedNodeId(node.id)}
+                    className={`w-12 h-12 rounded-full border-2 cursor-pointer flex items-center justify-center transition-all duration-300 relative ${nodeStyle}`}
                   >
                     {node.status === 'completed' && <Check className="w-5 h-5" />}
                     {node.status === 'in-progress' && <Play className="w-5 h-5 fill-current animate-pulse text-cyan-300" />}
@@ -165,7 +273,7 @@ export default function TrackView() {
         </div>
 
         {/* SIDE DRAWER COLUMN (Slides in when node selected or default selected node) */}
-        <div className="lg:col-span-4 h-full">
+        <div className="lg:col-span-4 h-full relative">
           <AnimatePresence mode="wait">
             {selectedNode ? (
               <motion.div
@@ -178,16 +286,16 @@ export default function TrackView() {
               >
                 {/* Header controls drawer */}
                 <div className="flex items-center justify-between mb-6 pb-3 border-b border-white/5">
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-xs font-mono font-black text-indigo-300 uppercase">
+                  <div className="flex items-center gap-1.5 font-mono">
+                    <span className="text-xs font-black text-indigo-300 uppercase">
                       {selectedNode.week}
                     </span>
-                    <span className="text-[10px] text-gray-500 font-mono tracking-wide">DETAIL_RIG</span>
+                    <span className="text-[10px] text-gray-500 tracking-wide">DETAIL_RIG</span>
                   </div>
 
                   <button
-                    onClick={() => setSelectedNode(null)}
-                    className="p-1 rounded-md bg-white/5 text-gray-400 hover:text-white cursor-none"
+                    onClick={() => setSelectedNodeId(null)}
+                    className="p-1 rounded-md bg-white/5 text-gray-400 hover:text-white cursor-pointer"
                   >
                     <X className="w-4 h-4" />
                   </button>
@@ -244,14 +352,26 @@ export default function TrackView() {
                   </div>
                 </div>
 
+                {/* Security Sandbox Alert Indicator when guest is exploring tracker */}
+                {!user && (
+                  <div className="mb-4 p-2.5 rounded bg-amber-500/10 border border-amber-500/20 flex items-center gap-2 text-[10px] text-amber-350">
+                    <ShieldEllipsis className="w-4 h-4 shrink-0 text-amber-450 animate-pulse" />
+                    <span>Using local sandbox fallback. Auth to sync.</span>
+                  </div>
+                )}
+
                 {/* Drawer bottom controls */}
                 {selectedNode.status === 'completed' ? (
                   <div className="flex items-center gap-2 text-xs text-cyber-green font-bold bg-cyber-green/5 border border-cyber-green/20 p-3 rounded-lg text-center justify-center font-sans">
                     <Check className="w-4 h-4 text-emerald-400" /> Complete & Verified
                   </div>
                 ) : selectedNode.status === 'in-progress' ? (
-                  <GlowButton variant="cyan" className="w-full text-xs py-3 font-semibold">
-                    Launch active terminal workspace
+                  <GlowButton
+                    onClick={runTerminalSimulation}
+                    variant="cyan"
+                    className="w-full text-xs py-3 font-semibold uppercase tracking-wider font-mono h-11"
+                  >
+                    Launch Terminal Workspace &rarr;
                   </GlowButton>
                 ) : (
                   <div className="flex items-center gap-2 text-xs text-gray-500 bg-black/45 border border-white/5 p-3 rounded-lg text-center justify-center font-mono">
@@ -261,7 +381,7 @@ export default function TrackView() {
               </motion.div>
             ) : (
               <div className="w-full h-full min-h-[300px] border border-dashed border-white/5 bg-cyber-card/10 rounded-2xl flex flex-col items-center justify-center text-center p-6 select-none font-sans">
-                <Layers className="w-8 h-8 text-gray-600 mb-2 animate-bounce" />
+                <Layers className="w-8 h-8 text-gray-600 mb-2" />
                 <h4 className="text-gray-300 text-sm font-semibold mb-1">Click a Map Node</h4>
                 <p className="text-[11px] text-gray-500 max-w-xs leading-normal">
                   Select any week's node on the timeline path map layout to load detailed sub-module parameters, XP details, and simulation projects.
@@ -272,6 +392,93 @@ export default function TrackView() {
         </div>
 
       </div>
+
+      {/* Futuristic Simulator Terminal Overlay Modal */}
+      <AnimatePresence>
+        {isSimulatingTerminal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-4"
+          >
+            <motion.div
+              initial={{ y: 30, scale: 0.95 }}
+              animate={{ y: 0, scale: 1 }}
+              exit={{ y: 30, scale: 0.95 }}
+              className="max-w-2xl w-full rounded-xl bg-black border border-cyan-500/30 overflow-hidden shadow-[0_0_50px_rgba(6,182,212,0.25)] flex flex-col h-[400px]"
+            >
+              {/* Terminal Window Header Bar */}
+              <div className="bg-[#111] px-4 py-3 border-b border-cyan-500/20 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="flex gap-1.5">
+                    <span className="w-3 h-3 rounded-full bg-red-500/40 border border-red-500" />
+                    <span className="w-3 h-3 rounded-full bg-amber-500/40 border border-amber-500" />
+                    <span className="w-3 h-3 rounded-full bg-emerald-500/40 border border-emerald-500" />
+                  </div>
+                  <span className="text-[11px] font-mono font-bold text-cyber-cyan tracking-wider ml-2 flex items-center gap-1.5">
+                    <TermIcon className="w-3.5 h-3.5 text-cyan-400" /> {selectedNode?.projects[0] || "WORKSPACE_DEBUGGER"} - TARGET::SIM_RUN
+                  </span>
+                </div>
+                <div className="text-[9px] font-mono text-gray-500 font-bold uppercase">SANDBOX_VM::ONLINE</div>
+              </div>
+
+              {/* Terminal Screen Body */}
+              <div className="p-5 flex-1 overflow-y-auto font-mono text-xs text-cyan-400/90 space-y-2 scrollbar-thin scrollbar-thumb-white/10">
+                {terminalLogs.map((log, i) => (
+                  <motion.div
+                    key={i}
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    className={
+                      log.includes('[SUCCESS]')
+                        ? 'text-emerald-400 font-bold'
+                        : log.includes('[WARNING]')
+                        ? 'text-amber-400'
+                        : 'text-gray-300'
+                    }
+                  >
+                    {log}
+                  </motion.div>
+                ))}
+
+                {/* Animated typing trailing block */}
+                {!simSuccess && (
+                  <motion.div
+                    animate={{ opacity: [1, 0] }}
+                    transition={{ repeat: Infinity, duration: 0.8 }}
+                    className="inline-block w-2.5 h-4 bg-cyan-400"
+                  />
+                )}
+              </div>
+
+              {/* Terminal Footer Panel */}
+              <div className="bg-[#111] border-t border-cyan-500/20 px-5 py-4 flex flex-col sm:flex-row items-center justify-between gap-3 shrink-0">
+                <div className="text-[10px] text-gray-500 font-mono">
+                  Press acknowledge to close simulated telemetry session.
+                </div>
+                {simSuccess ? (
+                  <GlowButton
+                    onClick={() => {
+                      setIsSimulatingTerminal(false);
+                      setSelectedNodeId(null);
+                    }}
+                    variant="cyan"
+                    className="text-xs py-2 px-8 font-black uppercase font-mono tracking-wider"
+                  >
+                    Acknowledge telemetry
+                  </GlowButton>
+                ) : (
+                  <div className="flex items-center gap-2 text-[10px] font-bold text-cyan-400 font-mono uppercase tracking-widest animate-pulse">
+                    <ShieldEllipsis className="w-4 h-4 text-cyan-400" /> Computing telemetry coefficients...
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
 
     </div>
   );

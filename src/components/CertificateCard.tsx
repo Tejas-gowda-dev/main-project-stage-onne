@@ -6,9 +6,14 @@ import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
 import GlowButton from './GlowButton';
 import FloatingParticles from './FloatingParticles';
+import { UserSession } from '../types';
 
-export default function CertificateCard() {
-  const [studentName, setStudentName] = useState('ROHAN SHARMA');
+interface CertificateProps {
+  user?: UserSession | null;
+}
+
+export default function CertificateCard({ user }: CertificateProps) {
+  const [studentName, setStudentName] = useState(() => user?.name?.toUpperCase() || 'ROHAN SHARMA');
   const [courseTitle, setCourseTitle] = useState('Autonomous Robotics & AI Integration Track');
   const [issueDate, setIssueDate] = useState('May 22, 2026');
   const [certID, setCertID] = useState('IF-ROB-99482');
@@ -19,6 +24,12 @@ export default function CertificateCard() {
   const coreCertRef = useRef<HTMLDivElement>(null);
 
   // GSAP roll-in or unfold animation of the A4 layout on load
+  useEffect(() => {
+    if (user?.name) {
+      setStudentName(user.name.toUpperCase());
+    }
+  }, [user]);
+
   useEffect(() => {
     if (!coreCertRef.current) return;
     
@@ -211,7 +222,7 @@ function replaceModernColors(str: string): string {
             value={studentName}
             onChange={(e) => setStudentName(e.target.value.toUpperCase())}
             maxLength={28}
-            className="w-full px-3 py-2 text-xs rounded-lg bg-black/45 focus:outline-none focus:border-indigo-500/50 text-white border border-white/10 tracking-wide font-medium cursor-none"
+            className="w-full px-3 py-2 text-xs rounded-lg bg-black/45 focus:outline-none focus:border-indigo-500/50 text-white border border-white/10 tracking-wide font-medium"
             placeholder="Recipient Full Name"
           />
         </div>
@@ -231,7 +242,7 @@ function replaceModernColors(str: string): string {
               };
               setCertID(codes[e.target.value] || 'IF-GEN-55102');
             }}
-            className="w-full px-3 py-2 text-xs rounded-lg bg-black/45 focus:outline-none focus:border-indigo-500/50 text-white border border-white/10 font-medium cursor-none"
+            className="w-full px-3 py-2 text-xs rounded-lg bg-black/45 focus:outline-none focus:border-indigo-500/50 text-white border border-white/10 font-medium"
           >
             <option>Autonomous Robotics & AI Integration Track</option>
             <option>Deep Learning & Edge Computing Deployment</option>
@@ -247,7 +258,7 @@ function replaceModernColors(str: string): string {
             type="text"
             value={issueDate}
             onChange={(e) => setIssueDate(e.target.value)}
-            className="w-full px-3 py-2 text-xs rounded-lg bg-black/45 focus:outline-none focus:border-indigo-500/50 text-white border border-white/10 tracking-wide font-medium cursor-none"
+            className="w-full px-3 py-2 text-xs rounded-lg bg-black/45 focus:outline-none focus:border-indigo-500/50 text-white border border-white/10 tracking-wide font-medium"
             placeholder="Date of Award"
           />
         </div>
