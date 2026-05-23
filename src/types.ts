@@ -13,6 +13,7 @@ export interface Program {
   rating: number;
   description: string;
   curriculum: string[];
+  price?: number;
 }
 
 export interface Testimonial {
@@ -76,4 +77,5 @@ export interface UserSession {
   activeNodeId: string;
   badges: string[];
   labsCompleted: number;
+  purchasedPrograms?: string[];
 }

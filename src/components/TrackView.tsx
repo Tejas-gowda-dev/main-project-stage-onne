@@ -152,6 +152,71 @@ export default function TrackView({ user, onProgressUpdate, onLoginClick }: Trac
     }
   };
 
+  if (!user) {
+    return (
+      <div className="w-full flex flex-col pt-32 pb-16 px-4 max-w-xl mx-auto text-center font-mono">
+        <div className="inline-flex p-3 rounded-full bg-red-500/10 border border-red-500/20 mb-4 text-red-500 mx-auto">
+          <Lock className="w-6 h-6 text-red-500 animate-pulse" />
+        </div>
+        <h3 className="text-white font-display font-black uppercase text-sm tracking-wider">SECURE_TRACK_GATED</h3>
+        <p className="text-xs text-gray-500 mt-2 font-sans mb-6">
+          You must finalize your candidate profile and purchase a specialized engineering track to access weekly coding milestones.
+        </p>
+        <GlowButton onClick={onLoginClick} variant="gradient" className="w-full h-11.5 text-xs font-mono uppercase tracking-widest">
+          Sign In to Access Curriculum Roadmap
+        </GlowButton>
+      </div>
+    );
+  }
+
+  const purchasedPrograms = user?.purchasedPrograms || [];
+  const hasPurchasedAny = purchasedPrograms.length > 0;
+
+  if (!hasPurchasedAny) {
+    return (
+      <div className="w-full flex flex-col pt-32 pb-16 px-4 max-w-2xl mx-auto text-center font-mono select-none">
+        <div className="relative mb-6 inline-block mx-auto">
+          <div className="w-20 h-20 rounded-2xl bg-indigo-500/10 border-2 border-indigo-500/35 flex items-center justify-center shadow-[0_0_50px_rgba(99,102,241,0.2)] animate-pulse">
+            <Lock className="w-10 h-10 text-cyan-400" />
+          </div>
+          <div className="absolute -bottom-1 -right-4 w-6 h-6 rounded-full bg-indigo-500 border border-black flex items-center justify-center text-white text-[10px] font-black">₹</div>
+        </div>
+
+        <h3 className="text-2xl font-display font-extrabold text-white tracking-tight mb-2">No Active Curriculum Track</h3>
+        <p className="text-xs text-gray-400 font-sans max-w-md mx-auto mb-8 leading-relaxed">
+          Unlock your chosen engineering specialization (e.g. Autonomous Robotics or Full-Stack Distributed Systems) from the catalog first to start tracking weekly laboratory assignments, terminal diagnostics, and certifications.
+        </p>
+
+        <div className="p-5 rounded-2xl border border-white/5 bg-white/[0.02] max-w-md mx-auto mb-8 text-left font-sans">
+          <h4 className="text-[10px] font-bold text-indigo-300 uppercase tracking-widest font-mono mb-2">// INCLUDED COHORT FEATURES:</h4>
+          <ul className="text-xs text-gray-400 space-y-2">
+            <li className="flex items-center gap-2">
+              <Check className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+              <span>Full 12-week step-by-step curriculum milestones</span>
+            </li>
+            <li className="flex items-center gap-2">
+              <Check className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+              <span>Automated terminal diagnostics with simulated VM debugger</span>
+            </li>
+            <li className="flex items-center gap-2">
+              <Check className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+              <span>Personalized graduation certificate with instant PDF vector print</span>
+            </li>
+          </ul>
+        </div>
+
+        <GlowButton
+          onClick={() => {
+            window.location.hash = '#/programs';
+          }}
+          variant="gradient"
+          className="w-full sm:w-64 mx-auto h-12 text-xs font-mono tracking-widest uppercase"
+        >
+          Explore Catalog & Get Pricing &rarr;
+        </GlowButton>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full flex flex-col pt-24 pb-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto z-10 font-sans relative select-none">

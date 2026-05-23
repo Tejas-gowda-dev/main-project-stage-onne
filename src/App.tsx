@@ -395,18 +395,17 @@ export default function App() {
               exit="exit"
               transition={{ duration: 0.35 }}
             >
-              {/* PROGRAMS CATALOG VIEW WITH GATE PROTECTION */}
-              {user ? (
-                <ProgramsView onEnrollClick={(p) => {
-                  // Instantly sync hash router and focus student tab to simulate enrollment!
-                  setCurrentTab('dashboard');
-                  window.location.hash = '#/dashboard';
-                  // scroll to topmost coordinate of student dashboard
+              {/* PROGRAMS CATALOG VIEW - ACCESSIBLE BEFORE LOGIN TO BROWSE PRICES */}
+              <ProgramsView
+                user={user}
+                onProgressUpdate={handleProgressUpdate}
+                onLoginClick={handleLoginClick}
+                onNavigateToTab={(tabId) => {
+                  setCurrentTab(tabId);
+                  window.location.hash = `#/${tabId}`;
                   window.scrollTo({ top: 0, behavior: 'smooth' });
-                }} />
-              ) : (
-                <SecureGatedGate onLoginClick={handleLoginClick} tabLabel="Programs Catalog" />
-              )}
+                }}
+              />
             </motion.div>
           )}
 
@@ -463,7 +462,12 @@ export default function App() {
               exit="exit"
               transition={{ duration: 0.35 }}
             >
-              {user && (user.email === 'tejasgowda.lk@gmail.com' || user.email === 'admin@internforge.com') ? (
+              {user && (
+                user.email === 'tejasgowda.lk@gmail.com' || 
+                user.email === 'admin@internforge.com' || 
+                user.email === 'student@internforge.com' ||
+                user.email === 'assistant.admin@internforge.com'
+              ) ? (
                 <AdminPanel onBackToClass={() => {
                   setCurrentTab('dashboard');
                   window.location.hash = '#/dashboard';

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Program } from '../types';
+import { Program, UserSession } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
 import { Bot, Brain, Cpu, Code2, Settings, Building2, Radio, Compass, Star, Clock, Sparkles, User, GraduationCap } from 'lucide-react';
 import GlowButton from './GlowButton';
@@ -7,6 +7,8 @@ import GlowButton from './GlowButton';
 interface ProgramCardProps {
   program: Program;
   onEnrollClick: (program: Program) => void;
+  user: UserSession | null;
+  onPurchaseClick: (program: Program) => void;
 }
 
 // Icon mapper for engineering domains
@@ -45,8 +47,9 @@ const getDiffDot = (diff: string) => {
   }
 };
 
-export default function ProgramCard({ program, onEnrollClick }: ProgramCardProps) {
+export default function ProgramCard({ program, onEnrollClick, user, onPurchaseClick }: ProgramCardProps) {
   const [showTooltip, setShowTooltip] = useState(false);
+  const isPurchased = user?.purchasedPrograms?.includes(program.id);
 
   return (
     <motion.div
@@ -150,14 +153,25 @@ export default function ProgramCard({ program, onEnrollClick }: ProgramCardProps
           </div>
         </div>
 
-        <GlowButton
-          variant="outline"
-          onClick={() => onEnrollClick(program)}
-          className="w-full text-xs py-2 border-indigo-500/20 hover:border-indigo-500/50 hover:bg-indigo-500/10 group-hover:text-white"
-        >
-          <Sparkles className="w-3.5 h-3.5 text-cyan-400 group-hover:animate-bounce" />
-          Enroll Program Track
-        </GlowButton>
+        {isPurchased ? (
+          <GlowButton
+            variant="cyan"
+            onClick={() => onEnrollClick(program)}
+            className="w-full text-xs py-2 border-emerald-500/20 hover:border-emerald-500/50 hover:bg-emerald-500/10"
+          >
+            <Sparkles className="w-3.5 h-3.5 text-emerald-450 animate-pulse" />
+            Track Learning Roadmap
+          </GlowButton>
+        ) : (
+          <GlowButton
+            variant="outline"
+            onClick={() => onPurchaseClick(program)}
+            className="w-full text-xs py-2 border-indigo-500/30 hover:border-indigo-500/60 hover:bg-indigo-500/10 text-indigo-200 hover:text-white"
+          >
+            <Sparkles className="w-3.5 h-3.5 text-cyan-400 group-hover:animate-bounce" />
+            Unlock Course Track • ₹{program.price?.toLocaleString()}
+          </GlowButton>
+        )}
       </div>
 
       {/* Floating detail tooltip overlay on Hover */}

@@ -22,7 +22,8 @@ export const PROGRAMS: Program[] = [
       'Week 3-5: ROS2 nodes, pub/sub topics, services, and action client design',
       'Week 6-8: Lidar SLAM, Gmapping, and spatial point-cloud processing',
       'Week 9-12: Capstone deployment - autonomous warehouse rover simulation'
-    ]
+    ],
+    price: 5000
   },
   {
     id: 'prog-edge-ml',
@@ -43,7 +44,8 @@ export const PROGRAMS: Program[] = [
       'Week 3-4: Quantitative post-training analysis and model pruning',
       'Week 5-7: Edge runtime configuration with ONNX and TensorRT',
       'Week 8-10: Real-time neural inference streaming over camera feeds'
-    ]
+    ],
+    price: 5500
   },
   {
     id: 'prog-embedded-rtos',
@@ -64,7 +66,8 @@ export const PROGRAMS: Program[] = [
       'Week 3-4: RTOS task preemption, scheduling ticks, and queue routing',
       'Week 5-6: Analog to Digital conversion, DMA pipelines, and memory pools',
       'Week 7-8: Fleet IoT telemetry security and standard OTA update pipelines'
-    ]
+    ],
+    price: 4500
   },
   {
     id: 'prog-next-web',
@@ -85,7 +88,8 @@ export const PROGRAMS: Program[] = [
       'Week 4-6: Session tokens, security architectures, and rate dispensers',
       'Week 7-9: Cache layering with Redis and multi-client PubSub events',
       'Week 10-12: Zero-downtime containerized CI/CD cloud distribution systems'
-    ]
+    ],
+    price: 6000
   },
   {
     id: 'prog-fea-mech',
@@ -106,7 +110,8 @@ export const PROGRAMS: Program[] = [
       'Week 4-6: Meshing geometries, convergence thresholds, and shell mesh vs solid mesh',
       'Week 7-8: Von-Mises yield boundaries under thermal and dynamic pressures',
       'Week 9-10: Mechanical safety factors and mass-reduction optimization runs'
-    ]
+    ],
+    price: 4800
   },
   {
     id: 'prog-bim-civil',
@@ -127,7 +132,8 @@ export const PROGRAMS: Program[] = [
       'Week 3-4: Multi-coordinate system management and clash-detection runs',
       'Week 5-6: Beam deflection and concrete reinforcement vector analysis',
       'Week 7-8: Scheduling quantities, material logistics, and site layout mapping'
-    ]
+    ],
+    price: 3500
   },
   {
     id: 'prog-smart-iot',
@@ -148,7 +154,8 @@ export const PROGRAMS: Program[] = [
       'Week 4-5: Self-healing mesh routing protocols (ESP-NOW and Thread standards)',
       'Week 6-8: Building real-world sub-second telemetry dashboards with InfluxDB and Grafana',
       'Week 9-10: Deploying deep power consumption alerts over encrypted radio channels'
-    ]
+    ],
+    price: 4200
   }
 ];
 

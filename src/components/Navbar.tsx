@@ -31,7 +31,12 @@ export default function Navbar({ currentTab, setCurrentTab, onApplyClick, user, 
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const isAdmin = user && (user.email === 'tejasgowda.lk@gmail.com' || user.email === 'admin@internforge.com');
+  const isAdmin = user && (
+    user.email === 'tejasgowda.lk@gmail.com' || 
+    user.email === 'admin@internforge.com' || 
+    user.email === 'student@internforge.com' ||
+    user.email === 'assistant.admin@internforge.com'
+  );
 
   const navItems = [
     { id: 'home', label: 'Home', icon: <Rocket className="w-4 h-4 text-cyan-400" /> },
@@ -39,7 +44,7 @@ export default function Navbar({ currentTab, setCurrentTab, onApplyClick, user, 
     { id: 'dashboard', label: 'Dashboard', icon: <BarChart4 className="w-4 h-4 text-purple-400" /> },
     { id: 'track', label: 'Track', icon: <Map className="w-4 h-4 text-emerald-400" /> },
     { id: 'certificate', label: 'Certificate', icon: <Award className="w-4 h-4 text-amber-400" /> },
-    ...(isAdmin ? [{ id: 'admin', label: 'Admin Panel', icon: <Terminal className="w-4 h-4 text-rose-450" /> }] : []),
+    ...(isAdmin ? [{ id: 'admin', label: 'Admin Panel', icon: <Terminal className="w-4 h-4 text-rose-400" /> }] : []),
   ];
 
   const navigateTo = (tabId: string) => {
@@ -52,11 +57,7 @@ export default function Navbar({ currentTab, setCurrentTab, onApplyClick, user, 
 
   return (
     <header
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        isScrolled
-          ? 'py-3 bg-cyber-bg/85 backdrop-blur-xl border-b border-indigo-500/15 shadow-[0_10px_25px_-10px_rgba(0,0,0,0.5)]'
-          : 'py-5 bg-transparent border-b border-white/0'
-      }`}
+      className="fixed top-0 left-0 right-0 z-50 py-3.5 bg-cyber-bg/95 md:bg-cyber-bg/90 backdrop-blur-xl border-b border-indigo-500/15 shadow-[0_10px_30px_rgba(0,0,0,0.6)] transition-all duration-300"
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between">

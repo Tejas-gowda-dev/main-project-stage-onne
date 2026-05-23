@@ -7,6 +7,7 @@ import { jsPDF } from 'jspdf';
 import GlowButton from './GlowButton';
 import FloatingParticles from './FloatingParticles';
 import { UserSession } from '../types';
+import { PROGRAMS } from '../data';
 
 interface CertificateProps {
   user?: UserSession | null;
@@ -15,7 +16,7 @@ interface CertificateProps {
 
 export default function CertificateCard({ user, onProgressUpdate }: CertificateProps) {
   const [studentName, setStudentName] = useState(() => user?.name?.toUpperCase() || 'ROHAN SHARMA');
-  const [courseTitle, setCourseTitle] = useState('Autonomous Robotics & AI Integration Track');
+  const [courseTitle, setCourseTitle] = useState('Autonomous Robotics & AI Integration');
   const [issueDate, setIssueDate] = useState('May 23, 2026');
   const [certID, setCertID] = useState('IF-ROB-99482');
   const [isGenerating, setIsGenerating] = useState(false);
@@ -25,12 +26,47 @@ export default function CertificateCard({ user, onProgressUpdate }: CertificateP
   const certContainerRef = useRef<HTMLDivElement>(null);
   const coreCertRef = useRef<HTMLDivElement>(null);
 
-  // GSAP roll-in or unfold animation of the A4 layout on load
+  // GSAP roll-in or unfold animation of the A4 layout on load and profile sync
   useEffect(() => {
     if (user?.name) {
       setStudentName(user.name.toUpperCase());
     }
+    const userPurchased = user?.purchasedPrograms || [];
+    if (userPurchased.length > 0) {
+      const activeProg = PROGRAMS.find(p => userPurchased.includes(p.id));
+      if (activeProg) {
+        setCourseTitle(activeProg.title);
+      }
+    } else {
+      setCourseTitle('Autonomous Robotics & AI Integration');
+    }
   }, [user]);
+
+  // Dynamically calculate certificate ID based on selected program title & student name
+  useEffect(() => {
+    const getProgramCode = (title: string): string => {
+      const t = title.toLowerCase();
+      if (t.includes('robotics')) return 'ROB';
+      if (t.includes('full-stack') || t.includes('distributed')) return 'FSD';
+      if (t.includes('edge') || t.includes('deep learning')) return 'AML';
+      if (t.includes('embedded') || t.includes('rtos')) return 'EMB';
+      if (t.includes('fea') || t.includes('design') || t.includes('mechanical')) return 'MCH';
+      if (t.includes('civil') || t.includes('bim')) return 'CVL';
+      if (t.includes('mesh') || t.includes('iot')) return 'IOT';
+      return 'GEN';
+    };
+
+    const code = getProgramCode(courseTitle);
+    const key = studentName || 'GUEST';
+    let hash = 0;
+    for (let i = 0; i < key.length; i++) {
+      hash = (hash << 5) - hash + key.charCodeAt(i);
+      hash = hash & hash;
+    }
+    const absHash = Math.abs(hash);
+    const orderNum = (absHash % 90000) + 10000;
+    setCertID(`IF-${code}-${orderNum}`);
+  }, [courseTitle, studentName]);
 
   useEffect(() => {
     try {
@@ -313,18 +349,32 @@ function replaceModernColors(str: string): string {
         <div>
           <div className="flex items-center justify-between mb-1.5">
             <label className="block text-xs text-gray-400 font-medium">Specialization Track Program</label>
-            <span className="text-[9px] font-mono text-cyan-400 uppercase flex items-center gap-1 select-none">
-              🔒 Locked Track
+            <span className="text-[9px] font-mono text-cyan-400 uppercase flex items-center gap-1 select-none font-semibold">
+              {(user?.purchasedPrograms?.length || 0) > 1 ? "✨ Select Active Track" : "🔒 Locked Track"}
             </span>
           </div>
-          <input
-            type="text"
-            value={courseTitle}
-            disabled
-            readOnly
-            className="w-full px-3 py-2 text-xs rounded-lg bg-black/25 text-gray-400 border border-white/5 tracking-wide font-semibold cursor-not-allowed select-none focus:outline-none"
-            placeholder="Specialization Track Program"
-          />
+          {(user?.purchasedPrograms?.length || 0) > 1 ? (
+            <select
+              value={courseTitle}
+              onChange={(e) => setCourseTitle(e.target.value)}
+              className="w-full px-3 py-2 text-xs rounded-lg bg-black/40 text-gray-200 border border-white/10 tracking-wide font-semibold focus:outline-none focus:border-indigo-500/50 cursor-pointer"
+            >
+              {PROGRAMS.filter(p => user?.purchasedPrograms?.includes(p.id)).map(p => (
+                <option key={p.id} value={p.title} className="bg-[#0D0B14] text-gray-200">
+                  {p.title}
+                </option>
+              ))}
+            </select>
+          ) : (
+            <input
+              type="text"
+              value={courseTitle}
+              disabled
+              readOnly
+              className="w-full px-3 py-2 text-xs rounded-lg bg-black/25 text-gray-400 border border-white/5 tracking-wide font-semibold cursor-not-allowed select-none focus:outline-none"
+              placeholder="Specialization Track Program"
+            />
+          )}
         </div>
 
         <div>
