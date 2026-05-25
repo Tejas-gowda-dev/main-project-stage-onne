@@ -59,6 +59,58 @@ const fallbackStore = {
       timestamp: new Date(Date.now() - 3600000).toISOString(),
       provider: "credentials"
     }
+  ] as any[],
+  transactions: [
+    {
+      id: "txn-1",
+      userId: "demo-user",
+      userEmail: "student@internforge.com",
+      userName: "Arjun Singh",
+      programId: "prog-fullstack",
+      programTitle: "Full-Stack Devops Cohort [Next.js + AWS]",
+      amount: 14999,
+      status: "success",
+      paymentGateway: "PhonePe",
+      timestamp: new Date(Date.now() - 172800000).toISOString()
+    },
+    {
+      id: "txn-2",
+      userId: "demo-user",
+      userEmail: "student@internforge.com",
+      userName: "Arjun Singh",
+      programId: "prog-quant",
+      programTitle: "High-Performance Quantitative Systems [Rust/C++]",
+      amount: 18450,
+      status: "failed",
+      paymentGateway: "Cashfree",
+      errorMessage: "Insufficient funds / Bank API timeout",
+      timestamp: new Date(Date.now() - 14400000).toISOString()
+    },
+    {
+      id: "txn-3",
+      userId: "demo-user",
+      userEmail: "student@internforge.com",
+      userName: "Arjun Singh",
+      programId: "prog-cyber",
+      programTitle: "Cybersecurity Red-Teaming & ISO 27001",
+      amount: 12500,
+      status: "failed",
+      paymentGateway: "PhonePe",
+      errorMessage: "UPI PIN validation limit exceeded",
+      timestamp: new Date(Date.now() - 86400000).toISOString()
+    },
+    {
+      id: "txn-4",
+      userId: "demo-user",
+      userEmail: "student@internforge.com",
+      userName: "Arjun Singh",
+      programId: "prog-fullstack",
+      programTitle: "Full-Stack Devops Cohort [Next.js + AWS]",
+      amount: 14999,
+      status: "success",
+      paymentGateway: "Cashfree",
+      timestamp: new Date(Date.now() - 3600000).toISOString()
+    }
   ] as any[]
 };
 
@@ -117,9 +169,23 @@ const LoginAuditSchema = new mongoose.Schema({
   provider: { type: String, default: "credentials" }
 }, { timestamps: true });
 
+const TransactionSchema = new mongoose.Schema({
+  userId: { type: String, required: true },
+  userEmail: { type: String, required: true },
+  userName: { type: String, required: true },
+  programId: { type: String, required: true },
+  programTitle: { type: String, required: true },
+  amount: { type: Number, required: true },
+  status: { type: String, required: true }, // "success" or "failed"
+  paymentGateway: { type: String, required: true }, // "PhonePe" or "Cashfree" or other
+  errorMessage: { type: String },
+  timestamp: { type: Date, default: Date.now }
+}, { timestamps: true });
+
 const User = (mongoose.models.User || mongoose.model("User", UserSchema)) as any;
 const ProfileRequest = (mongoose.models.ProfileRequest || mongoose.model("ProfileRequest", ProfileRequestSchema)) as any;
 const LoginAudit = (mongoose.models.LoginAudit || mongoose.model("LoginAudit", LoginAuditSchema)) as any;
+const Transaction = (mongoose.models.Transaction || mongoose.model("Transaction", TransactionSchema)) as any;
 
 async function startServer() {
   const app = express();
@@ -578,10 +644,15 @@ async function startServer() {
   // 6.5 Purchase / Unlock specialized program path
   app.post("/api/programs/purchase", async (req, res) => {
     try {
-      const { userId, programId } = req.body;
+      const { userId, programId, programTitle, amount, txnStatus, paymentGateway, errorMessage } = req.body;
       if (!userId || !programId) {
         return res.status(400).json({ error: "UserId and ProgramId are required parameters." });
       }
+
+      const verifiedStatus = txnStatus === "failed" ? "failed" : "success";
+      const verifiedGateway = paymentGateway || "PhonePe";
+      const actualAmount = amount || 14999;
+      const actualTitle = programTitle || "Specialization Program Track";
 
       if (isMongoConnected) {
         const user = await User.findById(userId);
@@ -589,32 +660,54 @@ async function startServer() {
           return res.status(404).json({ error: "User profile not found." });
         }
 
-        if (!user.purchasedPrograms) {
-          user.purchasedPrograms = [];
-        }
-
-        if (!user.purchasedPrograms.includes(programId)) {
-          user.purchasedPrograms.push(programId);
-        }
-
-        await user.save();
-        return res.json({
-          message: "Purchase processed successfully!",
-          user: {
-            id: user._id,
-            email: user.email,
-            name: user.name,
-            college: user.college || "BITS Pilani",
-            level: user.level,
-            xp: user.xp,
-            streak: user.streak,
-            completedNodes: user.completedNodes,
-            activeNodeId: user.activeNodeId,
-            badges: user.badges,
-            labsCompleted: user.labsCompleted,
-            purchasedPrograms: user.purchasedPrograms
-          }
+        // Record the transaction first
+        const transactionRecord = new Transaction({
+          userId: user._id.toString(),
+          userEmail: user.email,
+          userName: user.name,
+          programId,
+          programTitle: actualTitle,
+          amount: actualAmount,
+          status: verifiedStatus,
+          paymentGateway: verifiedGateway,
+          errorMessage: verifiedStatus === "failed" ? (errorMessage || "Bank transaction rejected.") : undefined,
+          timestamp: new Date()
         });
+        await transactionRecord.save();
+
+        if (verifiedStatus === "success") {
+          if (!user.purchasedPrograms) {
+            user.purchasedPrograms = [];
+          }
+
+          if (!user.purchasedPrograms.includes(programId)) {
+            user.purchasedPrograms.push(programId);
+          }
+
+          await user.save();
+          return res.json({
+            message: "Purchase processed successfully!",
+            user: {
+              id: user._id,
+              email: user.email,
+              name: user.name,
+              college: user.college || "BITS Pilani",
+              level: user.level,
+              xp: user.xp,
+              streak: user.streak,
+              completedNodes: user.completedNodes,
+              activeNodeId: user.activeNodeId,
+              badges: user.badges,
+              labsCompleted: user.labsCompleted,
+              purchasedPrograms: user.purchasedPrograms
+            }
+          });
+        } else {
+          return res.status(400).json({
+            error: errorMessage || "Payment Gateway failed to capture funds.",
+            transactionLogged: true
+          });
+        }
       } else {
         let userIdx = fallbackStore.users.findIndex(u => u.id === userId);
         if (userIdx === -1) {
@@ -641,18 +734,45 @@ async function startServer() {
         }
 
         const user = fallbackStore.users[userIdx];
-        if (!user.purchasedPrograms) {
-          user.purchasedPrograms = [];
-        }
 
-        if (!user.purchasedPrograms.includes(programId)) {
-          user.purchasedPrograms.push(programId);
+        // Record transaction in fallback store
+        const transactionRecord = {
+          id: "txn-" + Date.now(),
+          userId: user.id,
+          userEmail: user.email,
+          userName: user.name,
+          programId,
+          programTitle: actualTitle,
+          amount: actualAmount,
+          status: verifiedStatus,
+          paymentGateway: verifiedGateway,
+          errorMessage: verifiedStatus === "failed" ? (errorMessage || "Bank transaction rejected.") : undefined,
+          timestamp: new Date().toISOString()
+        };
+        if (!fallbackStore.transactions) {
+          fallbackStore.transactions = [];
         }
+        fallbackStore.transactions.push(transactionRecord);
 
-        return res.json({
-          message: "Purchase processed successfully using local sandbox fallback!",
-          user
-        });
+        if (verifiedStatus === "success") {
+          if (!user.purchasedPrograms) {
+            user.purchasedPrograms = [];
+          }
+
+          if (!user.purchasedPrograms.includes(programId)) {
+            user.purchasedPrograms.push(programId);
+          }
+
+          return res.json({
+            message: "Purchase processed successfully using local sandbox fallback!",
+            user
+          });
+        } else {
+          return res.status(400).json({
+            error: errorMessage || "Payment Gateway failed to capture funds (Sandbox).",
+            transactionLogged: true
+          });
+        }
       }
     } catch (err: any) {
       res.status(500).json({ error: err.message || "Unable to complete payment sequence." });
@@ -663,15 +783,17 @@ async function startServer() {
   app.get("/api/admin/data", async (req, res) => {
     try {
       if (isMongoConnected) {
-        const users = await User.find({}, "-password");
+        const users = await User.find({});
         const profileRequests = await ProfileRequest.find().sort({ createdAt: -1 });
         const loginAudits = await LoginAudit.find().sort({ timestamp: -1 });
-        return res.json({ users, profileRequests, loginAudits });
+        const transactions = await Transaction.find().sort({ createdAt: -1 });
+        return res.json({ users, profileRequests, loginAudits, transactions });
       } else {
         return res.json({
           users: fallbackStore.users,
           profileRequests: fallbackStore.profileRequests,
-          loginAudits: fallbackStore.loginAudits
+          loginAudits: fallbackStore.loginAudits,
+          transactions: fallbackStore.transactions || []
         });
       }
     } catch (err: any) {
@@ -734,6 +856,140 @@ async function startServer() {
       }
     } catch (err: any) {
       res.status(500).json({ error: err.message || "Failed to execute request decision action." });
+    }
+  });
+
+  // 8.2 Update student profile by Admin
+  app.post("/api/admin/users/update", async (req, res) => {
+    try {
+      const { id, name, email, password, college, completedNodes, purchasedPrograms, level, xp, labsCompleted } = req.body;
+      if (!id || !email || !name) {
+        return res.status(400).json({ error: "Missing required fields: id, email, or name" });
+      }
+
+      const normalizedEmail = email.toLowerCase().trim();
+
+      if (isMongoConnected) {
+        const user = await User.findById(id);
+        if (!user) {
+          return res.status(404).json({ error: "Candidate not found." });
+        }
+        user.name = name;
+        user.email = normalizedEmail;
+        if (password) {
+          user.password = password;
+        }
+        if (college !== undefined) {
+          user.college = college;
+        }
+        if (completedNodes !== undefined) {
+          user.completedNodes = completedNodes;
+        }
+        if (purchasedPrograms !== undefined) {
+          user.purchasedPrograms = purchasedPrograms;
+        }
+        if (level !== undefined) {
+          user.level = Number(level);
+        }
+        if (xp !== undefined) {
+          user.xp = Number(xp);
+        }
+        if (labsCompleted !== undefined) {
+          user.labsCompleted = Number(labsCompleted);
+        }
+        await user.save();
+        return res.json({ message: "Student record updated successfully!", user });
+      } else {
+        const uIdx = fallbackStore.users.findIndex(u => u.id === id);
+        if (uIdx === -1) {
+          return res.status(404).json({ error: "Candidate not found in local store." });
+        }
+        fallbackStore.users[uIdx].name = name;
+        fallbackStore.users[uIdx].email = normalizedEmail;
+        if (password) {
+          fallbackStore.users[uIdx].password = password;
+        }
+        if (college !== undefined) {
+          fallbackStore.users[uIdx].college = college;
+        }
+        if (completedNodes !== undefined) {
+          fallbackStore.users[uIdx].completedNodes = completedNodes;
+        }
+        if (purchasedPrograms !== undefined) {
+          fallbackStore.users[uIdx].purchasedPrograms = purchasedPrograms;
+        }
+        if (level !== undefined) {
+          fallbackStore.users[uIdx].level = Number(level);
+        }
+        if (xp !== undefined) {
+          fallbackStore.users[uIdx].xp = Number(xp);
+        }
+        if (labsCompleted !== undefined) {
+          fallbackStore.users[uIdx].labsCompleted = Number(labsCompleted);
+        }
+        return res.json({ message: "Student record updated in memory!", user: fallbackStore.users[uIdx] });
+      }
+    } catch (err: any) {
+      res.status(500).json({ error: err.message || "Failed to update candidate record." });
+    }
+  });
+
+  // 8.5 Create student profile by Admin
+  app.post("/api/admin/users/create", async (req, res) => {
+    try {
+      const { name, email, password, college } = req.body;
+      if (!email || !name || !password) {
+        return res.status(400).json({ error: "Missing required fields: email, name, and password are required." });
+      }
+
+      const normalizedEmail = email.toLowerCase().trim();
+
+      if (isMongoConnected) {
+        const existing = await User.findOne({ email: normalizedEmail });
+        if (existing) {
+          return res.status(400).json({ error: "A candidate profile with this email already exists." });
+        }
+        const newUser = new User({
+          email: normalizedEmail,
+          password,
+          name,
+          college: college || "BITS Pilani",
+          level: 1,
+          xp: 100,
+          streak: 1,
+          completedNodes: [],
+          activeNodeId: "w1-2",
+          badges: ["b1"],
+          labsCompleted: 0,
+          purchasedPrograms: []
+        });
+        await newUser.save();
+        return res.json({ message: "New candidate registered successfully!", user: newUser });
+      } else {
+        const existing = fallbackStore.users.find(u => u.email === normalizedEmail);
+        if (existing) {
+          return res.status(400).json({ error: "A candidate profile with this email already exists." });
+        }
+        const newUser = {
+          id: "mem-" + Date.now(),
+          email: normalizedEmail,
+          password,
+          name,
+          college: college || "BITS Pilani",
+          level: 1,
+          xp: 100,
+          streak: 1,
+          completedNodes: [] as string[],
+          activeNodeId: "w1-2",
+          badges: ["b1"],
+          labsCompleted: 0,
+          purchasedPrograms: [] as string[]
+        };
+        fallbackStore.users.push(newUser);
+        return res.json({ message: "New candidate registered in memory stores!", user: newUser });
+      }
+    } catch (err: any) {
+      res.status(500).json({ error: err.message || "Failed to register candidate profile." });
     }
   });
 

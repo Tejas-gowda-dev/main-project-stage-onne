@@ -24,6 +24,9 @@ export default function ProgramsView({ user, onProgressUpdate, onLoginClick, onN
   const [paymentMethod, setPaymentMethod] = useState<'upi' | 'card' | 'netbank'>('upi');
   const [paymentStep, setPaymentStep] = useState<'initial' | 'processing' | 'success' | 'error'>('initial');
   const [transactionLog, setTransactionLog] = useState<string>('');
+  const [paymentGateway, setPaymentGateway] = useState<'PhonePe' | 'Cashfree'>('PhonePe');
+  const [testSimStatus, setTestSimStatus] = useState<'success' | 'failed'>('success');
+  const [testSimErrorReason, setTestSimErrorReason] = useState<string>('Insufficient funds / Bank API timeout');
 
   // mock card variables
   const [cardNum, setCardNum] = useState('4532 9912 8847 2109');
@@ -153,30 +156,35 @@ export default function ProgramsView({ user, onProgressUpdate, onLoginClick, onN
     if (!user || !selectedPurchaseProgram) return;
 
     setPaymentStep('processing');
-    setTransactionLog('Connecting to secure Interbank Gateway...');
+    setTransactionLog(`Handshaking with ${paymentGateway} Secure API network...`);
 
     try {
       // Simulate transaction steps
       await new Promise(r => setTimeout(r, 600));
-      setTransactionLog('Decrypting transaction payload & tokenizing keys...');
-
-      await new Promise(r => setTimeout(r, 600));
-      setTransactionLog('Confirming ledger verification with NPCI APIs...');
+      setTransactionLog(`Verifying secure tokenization signatures using SHA-512...`);
 
       await new Promise(r => setTimeout(r, 650));
+      setTransactionLog('Registering transaction audit ledger status on server...');
+
+      await new Promise(r => setTimeout(r, 500));
       
       const response = await fetch('/api/programs/purchase', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           userId: user.id,
-          programId: selectedPurchaseProgram.id
+          programId: selectedPurchaseProgram.id,
+          programTitle: selectedPurchaseProgram.title,
+          amount: selectedPurchaseProgram.price || 14999,
+          txnStatus: testSimStatus,
+          paymentGateway: paymentGateway,
+          errorMessage: testSimStatus === 'failed' ? testSimErrorReason : undefined
         })
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || 'Server rejected transaction.');
+        throw new Error(errorData.error || 'Gateway rejected balance capture authorization.');
       }
 
       const data = await response.json();
@@ -398,6 +406,78 @@ export default function ProgramsView({ user, onProgressUpdate, onLoginClick, onN
                         ₹{selectedPurchaseProgram.price?.toLocaleString()}
                       </strong>
                     </div>
+                  </div>
+
+                  {/* Sandbox Simulated Parameters Setup */}
+                  <div className="p-3 bg-indigo-950/20 border border-indigo-500/25 rounded-xl mb-6 space-y-3 font-sans">
+                    <span className="block text-[10px] font-mono text-cyan-400 font-bold uppercase tracking-widest">
+                      🛠️ transaction simulator parameters
+                    </span>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-[10px] text-gray-500 uppercase tracking-widest mb-1.5">Payment Gateway</label>
+                        <div className="flex gap-1.5 p-0.5 bg-black/45 rounded-lg border border-white/5">
+                          <button
+                            type="button"
+                            onClick={() => setPaymentGateway('PhonePe')}
+                            className={`flex-1 py-1 rounded-md text-[10px] font-bold transition-all cursor-pointer ${
+                              paymentGateway === 'PhonePe' ? 'bg-[#5F259F] text-white shadow-md' : 'text-gray-400 hover:text-white'
+                            }`}
+                          >
+                            PhonePe
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setPaymentGateway('Cashfree')}
+                            className={`flex-1 py-1 rounded-md text-[10px] font-bold transition-all cursor-pointer ${
+                              paymentGateway === 'Cashfree' ? 'bg-cyan-600 text-white shadow-md' : 'text-gray-400 hover:text-white'
+                            }`}
+                          >
+                            Cashfree
+                          </button>
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-[10px] text-gray-500 uppercase tracking-widest mb-1.5">Simulation Result</label>
+                        <div className="flex gap-1.5 p-0.5 bg-black/45 rounded-lg border border-white/5">
+                          <button
+                            type="button"
+                            onClick={() => setTestSimStatus('success')}
+                            className={`flex-1 py-1 rounded-md text-[10px] font-bold transition-all cursor-pointer ${
+                              testSimStatus === 'success' ? 'bg-emerald-600 text-white shadow-md' : 'text-gray-400 hover:text-white'
+                            }`}
+                          >
+                            Success
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setTestSimStatus('failed')}
+                            className={`flex-1 py-1 rounded-md text-[10px] font-bold transition-all cursor-pointer ${
+                              testSimStatus === 'failed' ? 'bg-rose-600 text-white shadow-md' : 'text-gray-400 hover:text-white'
+                            }`}
+                          >
+                            Failure
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+
+                    {testSimStatus === 'failed' && (
+                      <div className="pt-1.5 border-t border-white/5 animate-fade-in">
+                        <label className="block text-[10px] text-gray-500 uppercase tracking-widest mb-1">Simulated Failure Reason</label>
+                        <select
+                          value={testSimErrorReason}
+                          onChange={(e) => setTestSimErrorReason(e.target.value)}
+                          className="w-full px-2 py-1 rounded bg-black/50 border border-white/10 text-[10px] text-rose-300 font-mono focus:outline-none focus:border-rose-500/50"
+                        >
+                          <option value="Insufficient funds / Bank API timeout">Insufficient funds / Bank API timeout</option>
+                          <option value="UPI PIN validation limit exceeded">UPI PIN validation limit exceeded</option>
+                          <option value="Security risk authorization limit triggered">Security risk authorization limit triggered</option>
+                          <option value="Payment processing server disconnected (National Gateway)">Payment processing server disconnected (National Gateway)</option>
+                          <option value="User cancelled transaction on PhonePe interface">User cancelled transaction on PhonePe interface</option>
+                        </select>
+                      </div>
+                    )}
                   </div>
 
                   {/* Tabs */}

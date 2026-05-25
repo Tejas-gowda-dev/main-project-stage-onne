@@ -21,9 +21,11 @@ import TrackView from './components/TrackView';
 import GlowButton from './components/GlowButton';
 import SecureGatedGate from './components/SecureGatedGate';
 import AdminPanel from './components/AdminPanel';
+import BlogView from './components/BlogView';
 
 export default function App() {
   const [currentTab, setCurrentTab] = useState<string>('home');
+  const [activePreviewTab, setActivePreviewTab] = useState<'dashboard' | 'track' | 'certificate'>('dashboard');
   const dotRef = useRef<HTMLDivElement>(null);
   const ringRef = useRef<HTMLDivElement>(null);
 
@@ -36,6 +38,14 @@ export default function App() {
     }
   });
   const [isAuthOpen, setIsAuthOpen] = useState(false);
+
+  // Prevent accessing blog if logged in
+  useEffect(() => {
+    if (user && currentTab === 'blog') {
+      setCurrentTab('dashboard');
+      window.location.hash = '#/dashboard';
+    }
+  }, [user, currentTab]);
 
   const handleLoginClick = () => {
     setIsAuthOpen(true);
@@ -65,7 +75,7 @@ export default function App() {
       const hash = window.location.hash;
       if (hash) {
         const route = hash.replace(/^#\/?/, '');
-        if (['home', 'programs', 'dashboard', 'track', 'certificate', 'admin'].includes(route)) {
+        if (['home', 'programs', 'dashboard', 'track', 'certificate', 'admin', 'blog'].includes(route)) {
           setCurrentTab(route);
         }
       }
@@ -255,6 +265,298 @@ export default function App() {
 
                 </div>
               </section>
+
+              {/* Dynamic Post-Login Portal Workspace Access Preview Showcase (Only visible to non-logged-in users) */}
+              {!user && (
+                <section className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto select-none relative">
+                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 rounded-full bg-indigo-500/5 blur-[120px] pointer-events-none" />
+                  
+                  <div className="text-center mb-12">
+                    <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 mb-3">
+                      <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                      <span className="text-[10px] sm:text-xs font-mono font-bold text-amber-300 tracking-widest uppercase">
+                        ★ EXCLUSIVE PORTAL WORKSPACE PREVIEW
+                      </span>
+                    </div>
+                    <h3 className="text-2xl sm:text-4.5xl font-display font-extrabold text-white tracking-tight leading-none mb-4">
+                      Explore Your Student Portal Access
+                    </h3>
+                    <p className="text-sm sm:text-base text-gray-400 max-w-2xl mx-auto font-sans">
+                      Wondering what access we provide once you log in? Here is an interactive, brief preview of the live candidate dashboard, structured roadmap track, and verification certifications.
+                    </p>
+                  </div>
+
+                  {/* Glass Interactive Dashboard Grid */}
+                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                    
+                    {/* Left Sidebar Control Panel - Menu list */}
+                    <div className="lg:col-span-4 space-y-3.5 text-left">
+                      <button
+                        type="button"
+                        onClick={() => setActivePreviewTab('dashboard')}
+                        className={`w-full flex items-start gap-4 p-4 rounded-2xl border text-left transition-all duration-300 cursor-pointer select-none ${
+                          activePreviewTab === 'dashboard'
+                            ? 'bg-indigo-600/10 border-indigo-500/40 shadow-[0_0_20px_rgba(99,102,241,0.15)]'
+                            : 'bg-black/25 border-white/5 hover:border-white/10 hover:bg-black/35'
+                        }`}
+                      >
+                        <div className={`p-2.5 rounded-xl border ${activePreviewTab === 'dashboard' ? 'bg-indigo-500/20 border-indigo-400/30 text-indigo-300' : 'bg-white/5 border-transparent text-gray-400'}`}>
+                          <Cpu className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <div className="font-display font-bold text-sm text-white flex items-center gap-2">
+                             1. Candidate Terminal Dashboard
+                             <span className="text-[8px] font-mono px-1.5 py-0.5 bg-cyan-400/10 text-cyan-400 rounded">GATED</span>
+                          </div>
+                          <p className="text-xs text-gray-400 mt-1 font-sans leading-relaxed">
+                            Monitor persistent simulator telemetry, real-time Docker compile instances, accumulated domain experience points (XP), and active labs.
+                          </p>
+                        </div>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setActivePreviewTab('track')}
+                        className={`w-full flex items-start gap-4 p-4 rounded-2xl border text-left transition-all duration-300 cursor-pointer select-none ${
+                          activePreviewTab === 'track'
+                            ? 'bg-emerald-600/10 border-emerald-500/40 shadow-[0_0_20px_rgba(16,185,129,0.15)]'
+                            : 'bg-black/25 border-white/5 hover:border-white/10 hover:bg-black/35'
+                        }`}
+                      >
+                        <div className={`p-2.5 rounded-xl border ${activePreviewTab === 'track' ? 'bg-emerald-500/20 border-emerald-400/30 text-emerald-300' : 'bg-white/5 border-transparent text-gray-400'}`}>
+                          <Terminal className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <div className="font-display font-bold text-sm text-white flex items-center gap-2">
+                            2. Adaptive Milestones Track
+                            <span className="text-[8px] font-mono px-1.5 py-0.5 bg-emerald-400/10 text-emerald-400 rounded">GATED</span>
+                          </div>
+                          <p className="text-xs text-gray-400 mt-1 font-sans leading-relaxed">
+                            A node-by-node structured sequence guiding you from elementary compiler configurations to advanced edge system integrations.
+                          </p>
+                        </div>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setActivePreviewTab('certificate')}
+                        className={`w-full flex items-start gap-4 p-4 rounded-2xl border text-left transition-all duration-300 cursor-pointer select-none ${
+                          activePreviewTab === 'certificate'
+                            ? 'bg-amber-600/10 border-amber-500/40 shadow-[0_0_20px_rgba(245,158,11,0.15)]'
+                            : 'bg-black/25 border-white/5 hover:border-white/10 hover:bg-black/35'
+                        }`}
+                      >
+                        <div className={`p-2.5 rounded-xl border ${activePreviewTab === 'certificate' ? 'bg-amber-500/20 border-amber-400/30 text-amber-300' : 'bg-white/5 border-transparent text-gray-400'}`}>
+                          <Award className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <div className="font-display font-bold text-sm text-white flex items-center gap-2">
+                            3. Holographic Credentials Award
+                            <span className="text-[8px] font-mono px-1.5 py-0.5 bg-amber-400/10 text-amber-400 rounded">GATED</span>
+                          </div>
+                          <p className="text-xs text-gray-400 mt-1 font-sans leading-relaxed">
+                            Generate high-contrast, personalized PDF vectors validating your industrial competence linked directly to database queries.
+                          </p>
+                        </div>
+                      </button>
+                    </div>
+
+                    {/* Right Canvas Dynamic Preview Box */}
+                    <div className="lg:col-span-8 bg-[#0B0F19]/60 border border-white/5 rounded-3xl p-6 relative overflow-hidden backdrop-blur-md min-h-[350px] shadow-2xl flex flex-col justify-between">
+                      
+                      {/* Gated Overlay Warning Banner */}
+                      <div className="absolute top-0 left-0 right-0 py-2.5 px-4 bg-gradient-to-r from-amber-500/10 via-amber-500/20 to-amber-500/10 border-b border-amber-500/15 backdrop-blur-md flex items-center justify-between z-20">
+                        <div className="flex items-center gap-2">
+                          <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping" />
+                          <span className="text-[10px] font-mono text-amber-300 uppercase tracking-widest font-black">
+                            DEMO_ACCESS_MODE_STABILIZED // PRIVATE STUDENT ENCLAVE
+                          </span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={handleLoginClick}
+                          className="text-[9px] font-mono text-white bg-amber-500 hover:bg-amber-400 px-2.5 py-1 rounded font-bold uppercase transition-all cursor-pointer shadow-md"
+                        >
+                          Sign In To Activate Real Access &rarr;
+                        </button>
+                      </div>
+
+                      {/* Display Selected Preview Mode */}
+                      <div className="pt-10 h-full flex flex-col justify-between">
+                        <AnimatePresence mode="wait">
+                          {activePreviewTab === 'dashboard' && (
+                            <motion.div
+                              key="demo-dash"
+                              initial={{ opacity: 0, scale: 0.96 }}
+                              animate={{ opacity: 1, scale: 1 }}
+                              exit={{ opacity: 0, scale: 0.96 }}
+                              transition={{ duration: 0.25 }}
+                              className="space-y-4 text-left"
+                            >
+                              <div className="flex justify-between items-center border-b border-white/5 pb-3">
+                                <div className="flex items-center gap-2">
+                                  <div className="w-7 h-7 rounded-full bg-indigo-500/10 border border-indigo-500/30 flex items-center justify-center text-xs text-indigo-300 font-bold">
+                                    C
+                                  </div>
+                                  <div>
+                                    <h4 className="text-xs font-bold text-gray-200">Rahul Sharma (Cadet #9204)</h4>
+                                    <p className="text-[9px] text-indigo-400 font-mono uppercase">COHORT_LABS_MOCK_TELEMETRY</p>
+                                  </div>
+                                </div>
+                                <div className="text-right font-mono text-[10px] text-gray-500">
+                                  SYSTEM: SECURE_SANDBOX
+                                </div>
+                              </div>
+
+                              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2">
+                                <div className="bg-black/35 border border-white/5 rounded-xl p-3">
+                                  <span className="block text-[8px] text-gray-500 font-mono uppercase">XP Level</span>
+                                  <span className="text-lg font-bold text-indigo-400 font-mono">Level 3</span>
+                                </div>
+                                <div className="bg-black/35 border border-white/5 rounded-xl p-3">
+                                  <span className="block text-[8px] text-gray-500 font-mono uppercase">Total XP accumulated</span>
+                                  <span className="text-lg font-bold text-emerald-400 font-mono">420 XP</span>
+                                </div>
+                                <div className="bg-black/35 border border-white/5 rounded-xl p-3">
+                                  <span className="block text-[8px] text-gray-500 font-mono uppercase">Simulation Labs cleared</span>
+                                  <span className="text-lg font-bold text-cyan-400 font-mono">4 Completed</span>
+                                </div>
+                                <div className="bg-black/35 border border-white/5 rounded-xl p-3">
+                                  <span className="block text-[8px] text-gray-500 font-mono uppercase">Active streak</span>
+                                  <span className="text-lg font-bold text-amber-500 font-mono">5 Days 🔥</span>
+                                </div>
+                              </div>
+
+                              {/* Interactive XP progress slider emulation */}
+                              <div className="bg-black/45 border border-white/5 rounded-xl p-[11px] space-y-2">
+                                <div className="flex justify-between items-center text-[10px] font-mono">
+                                  <span className="text-gray-400">XP PROGRESSION FOR CURRENT LEVEL</span>
+                                  <span className="text-indigo-300 font-bold">120 / 200 XP</span>
+                                </div>
+                                <div className="w-full h-2 rounded-full bg-white/5 overflow-hidden">
+                                  <div className="h-full bg-gradient-to-r from-indigo-500 to-cyan-400 w-[60%]" />
+                                </div>
+                              </div>
+
+                              <div className="bg-black/30 border border-white/5 rounded-xl p-3 font-mono text-[9px] text-indigo-300/85">
+                                <span className="text-amber-400 text-[10px] font-extrabold uppercase mr-1">[!] DEMO STATUS:</span>
+                                Real-time dynamic compilation is disabled. Logging in initiates container orchestration that automatically updates these values.
+                              </div>
+                            </motion.div>
+                          )}
+
+                          {activePreviewTab === 'track' && (
+                            <motion.div
+                              key="demo-track"
+                              initial={{ opacity: 0, scale: 0.96 }}
+                              animate={{ opacity: 1, scale: 1 }}
+                              exit={{ opacity: 0, scale: 0.96 }}
+                              transition={{ duration: 0.25 }}
+                              className="space-y-4 text-left"
+                            >
+                              <div className="border-b border-white/5 pb-3">
+                                <h4 className="text-xs font-bold text-gray-200">Adaptive Milestones Sequence Map</h4>
+                                <p className="text-[9px] text-emerald-400 font-mono uppercase">PROGRESSION_NODE_TELEMETRY</p>
+                              </div>
+
+                              {/* Visually stunning timeline */}
+                              <div className="space-y-3 pt-2 relative">
+                                <div className="absolute left-[13px] top-4 bottom-4 w-0.5 bg-white/5 z-0" />
+                                
+                                <div className="flex items-center gap-3.5 relative z-10">
+                                  <div className="w-7 h-7 rounded-full bg-emerald-500/20 border border-emerald-400 text-emerald-400 flex items-center justify-center text-xs font-bold font-sans">
+                                    ✓
+                                  </div>
+                                  <div className="flex-1 bg-black/25 border border-white/5 rounded-xl p-2 px-3 flex items-center justify-between">
+                                    <span className="text-xs text-white font-medium font-mono">Week 1: Preemptive Kernel Systems Boot</span>
+                                    <span className="text-[8px] font-bold text-emerald-400 font-mono px-2 py-0.5 bg-emerald-500/10 rounded uppercase">CLEARED</span>
+                                  </div>
+                                </div>
+
+                                <div className="flex items-center gap-3.5 relative z-10">
+                                  <div className="w-7 h-7 rounded-full bg-cyan-500/20 border border-cyan-400 text-cyan-400 flex items-center justify-center text-xs font-bold animate-pulse font-sans">
+                                    ▶
+                                  </div>
+                                  <div className="flex-1 bg-black/35 border border-cyan-500/25 rounded-xl p-2 px-3 flex items-center justify-between shadow-[0_0_15px_rgba(6,182,212,0.1)]">
+                                    <span className="text-xs text-cyan-300 font-medium font-mono">Week 2: Robotic Joint Kinematics Config</span>
+                                    <span className="text-[8px] font-bold text-cyan-400 font-mono px-2 py-0.5 bg-cyan-500/15 rounded uppercase">ACTIVE</span>
+                                  </div>
+                                </div>
+
+                                <div className="flex items-center gap-3.5 opacity-40 relative z-10">
+                                  <div className="w-7 h-7 rounded-full bg-white/5 border border-white/10 text-gray-500 flex items-center justify-center text-xs font-bold font-sans">
+                                    🔒
+                                  </div>
+                                  <div className="flex-1 bg-black/15 border border-transparent rounded-xl p-2 px-3 flex items-center justify-between">
+                                    <span className="text-xs text-gray-400 font-mono">Week 3: Quantized TensorRT Pipelines</span>
+                                    <span className="text-[8px] font-bold text-gray-500 font-mono px-2 py-0.5 bg-white/5 rounded uppercase">GATED</span>
+                                  </div>
+                                </div>
+                              </div>
+
+                              <div className="bg-black/30 border border-white/5 rounded-xl p-3 font-mono text-[9px] text-emerald-300/85">
+                                <span className="text-amber-400 text-[10px] font-extrabold uppercase mr-1">[!] STRUCTURE INFO:</span>
+                                Students unlock deep adaptive chapters automatically. Each node completed feeds data streams directly into the grading system.
+                              </div>
+                            </motion.div>
+                          )}
+
+                          {activePreviewTab === 'certificate' && (
+                            <motion.div
+                              key="demo-cert"
+                              initial={{ opacity: 0, scale: 0.96 }}
+                              animate={{ opacity: 1, scale: 1 }}
+                              exit={{ opacity: 0, scale: 0.96 }}
+                              transition={{ duration: 0.25 }}
+                              className="space-y-4 text-left"
+                            >
+                              <div className="border-b border-white/5 pb-3">
+                                <h4 className="text-xs font-bold text-gray-200">Verified Web Vector Credentials</h4>
+                                <p className="text-[9px] text-amber-400 font-mono uppercase">GRADUATE_CERTIFICATE_EMULATION</p>
+                              </div>
+
+                              {/* Realistic Holographic Certificate card mockup */}
+                              <div className="bg-gradient-to-br from-[#121626] to-[#0A0D18] border border-amber-500/35 rounded-2xl p-5 relative overflow-hidden flex flex-col justify-between h-44 shadow-lg text-center">
+                                {/* Subtle security vectors overlay background */}
+                                <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom_left,rgba(245,158,11,0.1),transparent_50%)] pointer-events-none" />
+                                
+                                <div className="flex justify-between items-center z-10 text-[9px] text-amber-500 font-mono">
+                                  <span>CREDENTIAL_ID: #IF-MOCK-89240</span>
+                                  <span>INTERNFORGE DEPLOYMENT UNIT</span>
+                                </div>
+
+                                <div className="z-10 py-1.5">
+                                  <h5 className="font-display font-bold text-sm tracking-wider text-white">RAHUL SHARMA</h5>
+                                  <div className="w-16 h-[1.5px] bg-amber-500/40 mx-auto my-1" />
+                                  <p className="text-[10px] text-gray-400 font-sans">
+                                    Has successfully completed the advanced Systems and Embedded Robotics Simulator track.
+                                  </p>
+                                </div>
+
+                                <div className="z-10 flex justify-between items-end">
+                                  <div className="text-left font-mono text-[8px] text-gray-500">
+                                    <span>ISSUED: MAY 23, 2026</span>
+                                  </div>
+                                  <div className="border border-amber-500/25 px-1.5 py-0.5 rounded bg-amber-500/10 font-mono text-[8px] text-amber-400 font-bold uppercase tracking-wider">
+                                    HOLO_SEALED ✓
+                                  </div>
+                                </div>
+                              </div>
+
+                              <div className="bg-black/30 border border-white/5 rounded-xl p-3 font-mono text-[9px] text-amber-300/85">
+                                <span className="text-amber-400 text-[10px] font-extrabold uppercase mr-1">[!] REAL VERIFICATION:</span>
+                                Once cleared, certificates include instant share features and cryptographic verification references to share on LinkedIn or with recruiters.
+                              </div>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      </div>
+
+                    </div>
+
+                  </div>
+                </section>
+              )}
 
               {/* Student Profile Provisioning Benefits Segment (Business Logic Breakdown) */}
               <section className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto select-none relative bg-gradient-to-b from-transparent via-cyan-500/5 to-transparent rounded-3xl my-8">
@@ -517,6 +819,19 @@ export default function App() {
               ) : (
                 <SecureGatedGate onLoginClick={handleLoginClick} tabLabel="Verified Program Certificates" />
               )}
+            </motion.div>
+          )}
+
+          {currentTab === 'blog' && (
+            <motion.div
+              key="blog"
+              variants={pageVariants}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              transition={{ duration: 0.35 }}
+            >
+              <BlogView />
             </motion.div>
           )}
         </AnimatePresence>

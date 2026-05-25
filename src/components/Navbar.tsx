@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Menu, X, Terminal, ChevronRight, GraduationCap, Award, Map, BarChart4, LayoutList, Rocket, LogOut } from 'lucide-react';
+import { Menu, X, Terminal, ChevronRight, GraduationCap, Award, Map, BarChart4, LayoutList, Rocket, LogOut, BookOpen, User, Mail, Building2, ChevronDown, Sparkles } from 'lucide-react';
 import GlowButton from './GlowButton';
 
 import { UserSession } from '../types';
@@ -17,6 +17,7 @@ interface NavbarProps {
 export default function Navbar({ currentTab, setCurrentTab, onApplyClick, user, onLoginClick, onLogout }: NavbarProps) {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
 
   // Monitor window coordinates to trigger shrink and shadow
   useEffect(() => {
@@ -38,14 +39,19 @@ export default function Navbar({ currentTab, setCurrentTab, onApplyClick, user, 
     user.email === 'assistant.admin@internforge.com'
   );
 
-  const navItems = [
-    { id: 'home', label: 'Home', icon: <Rocket className="w-4 h-4 text-cyan-400" /> },
-    { id: 'programs', label: 'Programs', icon: <LayoutList className="w-4 h-4 text-indigo-400" /> },
-    { id: 'dashboard', label: 'Dashboard', icon: <BarChart4 className="w-4 h-4 text-purple-400" /> },
-    { id: 'track', label: 'Track', icon: <Map className="w-4 h-4 text-emerald-400" /> },
-    { id: 'certificate', label: 'Certificate', icon: <Award className="w-4 h-4 text-amber-400" /> },
-    ...(isAdmin ? [{ id: 'admin', label: 'Admin Panel', icon: <Terminal className="w-4 h-4 text-rose-400" /> }] : []),
-  ];
+  const navItems = user 
+    ? [
+        { id: 'programs', label: 'Programs', icon: <LayoutList className="w-4 h-4 text-indigo-400" /> },
+        { id: 'dashboard', label: 'Dashboard', icon: <BarChart4 className="w-4 h-4 text-purple-400" /> },
+        { id: 'track', label: 'Track', icon: <Map className="w-4 h-4 text-emerald-400" /> },
+        { id: 'certificate', label: 'Certificate', icon: <Award className="w-4 h-4 text-amber-400" /> },
+        ...(isAdmin ? [{ id: 'admin', label: 'Admin Panel', icon: <Terminal className="w-4 h-4 text-rose-400" /> }] : []),
+      ]
+    : [
+        { id: 'home', label: 'Home', icon: <Rocket className="w-4 h-4 text-cyan-400" /> },
+        { id: 'programs', label: 'Programs', icon: <LayoutList className="w-4 h-4 text-indigo-400" /> },
+        { id: 'blog', label: 'Blog', icon: <BookOpen className="w-4 h-4 text-amber-400" /> },
+      ];
 
   const navigateTo = (tabId: string) => {
     setCurrentTab(tabId);
@@ -132,35 +138,107 @@ export default function Navbar({ currentTab, setCurrentTab, onApplyClick, user, 
           {/* Side action apply CTA */}
           <div className="hidden lg:flex items-center gap-4">
             {user ? (
-              <div className="flex items-center gap-2">
-                <button 
-                  onClick={() => navigateTo('dashboard')}
-                  className="text-xs font-mono text-cyan-400 hover:text-cyan-300 transition-colors duration-300 font-bold cursor-pointer flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-cyan-500/10 border border-cyan-500/20"
-                >
-                  <Terminal className="w-3.5 h-3.5 text-cyan-400" />
-                  ~/{user.name.split(' ')[0].toLowerCase()}
-                </button>
+              <div className="relative">
                 <button
-                  onClick={onLogout}
-                  title="Sign out of student session"
-                  className="p-1.5 px-2.5 rounded-lg bg-red-500/10 border border-red-500/20 hover:bg-red-500/25 hover:border-red-500/45 text-red-450 hover:text-red-300 transition-all cursor-pointer flex items-center gap-1 font-mono text-[10px] font-bold uppercase"
+                  type="button"
+                  onClick={() => setIsProfileOpen(!isProfileOpen)}
+                  className="text-xs font-mono text-cyan-400 hover:text-cyan-300 transition-colors duration-300 font-bold cursor-pointer flex items-center gap-2 px-3.5 py-2 rounded-xl bg-cyan-500/10 border border-cyan-500/20 active:scale-95"
                 >
-                  <LogOut className="w-3 h-3" />
-                  OUT
+                  <User className="w-3.5 h-3.5 text-cyan-400" />
+                  <span>{user.name.split(' ')[0]}</span>
+                  <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-300 ${isProfileOpen ? 'rotate-180' : ''}`} />
                 </button>
+
+                <AnimatePresence>
+                  {isProfileOpen && (
+                    <>
+                      {/* Click overlay to close dropdown */}
+                      <div className="fixed inset-0 z-40" onClick={() => setIsProfileOpen(false)} />
+                      
+                      <motion.div
+                        initial={{ opacity: 0, y: 12, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: 12, scale: 0.95 }}
+                        transition={{ duration: 0.2 }}
+                        className="absolute right-0 mt-2 w-80 bg-cyber-bg/95 border border-indigo-500/25 rounded-2xl p-5 shadow-[0_12px_40px_rgba(0,0,0,0.7)] backdrop-blur-3xl z-50 text-left space-y-4"
+                      >
+                        <div className="space-y-1">
+                          <div className="text-[9px] font-mono text-indigo-400 uppercase tracking-widest font-black flex items-center gap-1.5">
+                            <Sparkles className="w-3.5 h-3.5 text-amber-400" /> STUDENT PROFILE ACCESS
+                          </div>
+                          <h4 className="text-base font-display font-extrabold text-white tracking-tight leading-none pt-1">
+                            {user.name}
+                          </h4>
+                          <p className="text-[10px] font-mono text-cyan-400 uppercase tracking-wider">
+                            COHORT_MEMBER_ID: #{user.id.substring(0, 8)}
+                          </p>
+                        </div>
+
+                        <div className="space-y-2 border-t border-b border-white/5 py-3.5 text-xs">
+                          <div className="flex items-center gap-2.5 text-gray-300">
+                            <Mail className="w-4 h-4 text-cyan-400 shrink-0" />
+                            <span className="truncate select-all">{user.email}</span>
+                          </div>
+                          <div className="flex items-center gap-2.5 text-gray-300">
+                            <Building2 className="w-4 h-4 text-indigo-400 shrink-0" />
+                            <span className="truncate">{user.college || "Autonomous Institute"}</span>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-2 text-[11px]">
+                          <div className="bg-black/35 border border-white/5 p-2 rounded-lg font-mono">
+                            <span className="text-gray-500 text-[8px] block uppercase font-bold">Domain Rank</span>
+                            <span className="text-cyan-400 font-extrabold">Lvl {user.level} Track</span>
+                          </div>
+                          <div className="bg-black/35 border border-white/5 p-2 rounded-lg font-mono">
+                            <span className="text-gray-500 text-[8px] block uppercase font-bold">Domain XP</span>
+                            <span className="text-emerald-400 font-extrabold">{user.xp} Units</span>
+                          </div>
+                        </div>
+
+                        <div className="space-y-2 pt-1">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              navigateTo('dashboard');
+                              setIsProfileOpen(false);
+                            }}
+                            className="w-full py-2.5 px-3 rounded-lg bg-indigo-600/20 border border-indigo-500/35 hover:bg-indigo-600/40 hover:border-indigo-400 text-white font-mono text-[10px] font-extrabold uppercase transition-all duration-300 text-center cursor-pointer active:scale-98"
+                          >
+                            GO_TO_DASHBOARD &rarr;
+                          </button>
+                          
+                          <button
+                            type="button"
+                            onClick={() => {
+                              onLogout();
+                              setIsProfileOpen(false);
+                            }}
+                            className="w-full py-2.5 px-3 rounded-lg bg-red-500/10 border border-red-500/20 hover:bg-red-500/20 hover:border-red-400 text-red-400 font-mono text-[10px] font-extrabold uppercase transition-all duration-300 text-center cursor-pointer flex items-center justify-center gap-2 active:scale-98"
+                          >
+                            <LogOut className="w-3.5 h-3.5 text-red-400" />
+                            SIGN_OUT_SESSION
+                          </button>
+                        </div>
+                      </motion.div>
+                    </>
+                  )}
+                </AnimatePresence>
               </div>
             ) : (
-              <button 
-                onClick={onLoginClick}
-                className="text-xs font-mono text-gray-400 hover:text-white transition-colors duration-300 font-semibold cursor-pointer flex items-center gap-1.5"
-              >
-                <Terminal className="w-3.5 h-3.5 text-cyber-cyan" />
-                student login
-              </button>
+              <>
+                <button 
+                  onClick={onLoginClick}
+                  className="text-xs font-mono text-gray-400 hover:text-white transition-colors duration-300 font-semibold cursor-pointer flex items-center gap-1.5"
+                >
+                  <Terminal className="w-3.5 h-3.5 text-cyber-cyan" />
+                  student login
+                </button>
+                <GlowButton variant="gradient" onClick={onApplyClick} className="text-xs py-2 px-5">
+                  Apply Now
+                </GlowButton>
+              </>
             )}
-            <GlowButton variant="gradient" onClick={onApplyClick} className="text-xs py-2 px-5">
-              Apply Now
-            </GlowButton>
           </div>
 
           {/* Hamburger Mobile Toggle */}
@@ -215,39 +293,78 @@ export default function Navbar({ currentTab, setCurrentTab, onApplyClick, user, 
             <div className="flex flex-col gap-3 pt-4 border-t border-white/5">
               {user ? (
                 <>
+                  {/* Detailed, Gorgeous Student Profile Segment inside drawer */}
+                  <div className="bg-black/40 border border-indigo-500/20 rounded-2xl p-4 text-left space-y-3.5">
+                    <div className="space-y-1">
+                      <div className="text-[9px] font-mono text-indigo-400 uppercase tracking-widest font-black flex items-center gap-1.5">
+                        <Sparkles className="w-3.5 h-3.5 text-amber-400" /> MOBILE CREDENTIALS ENCLAVE
+                      </div>
+                      <h4 className="text-base font-display font-bold text-white tracking-tight">{user.name}</h4>
+                    </div>
+
+                    <div className="space-y-2 text-xs border-y border-white/5 py-3">
+                      <div className="flex items-center gap-2.5 text-gray-300">
+                        <Mail className="w-4 h-4 text-cyan-400 shrink-0" />
+                        <span className="truncate select-all">{user.email}</span>
+                      </div>
+                      <div className="flex items-center gap-2.5 text-gray-300">
+                        <Building2 className="w-4 h-4 text-indigo-400 shrink-0" />
+                        <span className="truncate">{user.college || "Autonomous Institute"}</span>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2 text-[10px]">
+                      <div className="bg-black/55 p-2 rounded-lg font-mono">
+                        <span className="text-gray-500 text-[8px] block uppercase font-bold">LEVEL STATUS</span>
+                        <span className="text-cyan-400 font-extrabold font-mono text-xs">Lvl {user.level}</span>
+                      </div>
+                      <div className="bg-black/55 p-2 rounded-lg font-mono">
+                        <span className="text-gray-500 text-[8px] block uppercase font-bold">TOTAL XP</span>
+                        <span className="text-emerald-400 font-extrabold font-mono text-xs">{user.xp} XP</span>
+                      </div>
+                    </div>
+
+                    <button 
+                      onClick={() => {
+                        navigateTo('dashboard');
+                        setIsMobileOpen(false);
+                      }}
+                      className="w-full py-2.5 rounded-xl bg-indigo-600 border border-indigo-500 text-center text-xs font-mono text-white font-bold flex items-center justify-center gap-2 cursor-pointer mt-1 active:scale-98"
+                    >
+                      <Terminal className="w-3.5 h-3.5" />
+                      ENTER WORKSPACE &rarr;
+                    </button>
+                  </div>
+
                   <button 
-                    onClick={() => navigateTo('dashboard')}
-                    className="w-full justify-center p-3 rounded-xl border border-cyan-500/20 bg-cyan-500/10 text-center text-sm font-mono text-cyan-400 hover:text-cyan-350 transition-colors font-bold flex items-center gap-2"
-                  >
-                    <Terminal className="w-4 h-4 text-cyan-400" />
-                    Student: {user.name}
-                  </button>
-                  <button 
+                    type="button"
                     onClick={() => {
                       onLogout();
                       setIsMobileOpen(false);
                     }}
-                    className="w-full justify-center p-3 rounded-xl border border-red-500/20 bg-red-500/10 text-center text-sm font-mono text-red-400 hover:text-red-350 transition-colors font-bold flex items-center gap-2"
+                    className="w-full justify-center p-3 rounded-xl border border-red-500/20 bg-red-500/10 text-center text-sm font-mono text-red-400 hover:text-red-350 transition-colors font-bold flex items-center justify-center gap-2 cursor-pointer active:scale-98"
                   >
                     <LogOut className="w-4 h-4 text-red-400" />
                     Sign Out / Local Reset
                   </button>
                 </>
               ) : (
-                <button 
-                  onClick={() => {
-                    onLoginClick();
-                    setIsMobileOpen(false);
-                  }}
-                  className="w-full justify-center p-3 text-center text-sm font-mono text-gray-400 hover:text-white transition-colors font-semibold flex items-center gap-2"
-                >
-                  <Terminal className="w-4 h-4 text-cyber-cyan" />
-                  Student Login
-                </button>
+                <>
+                  <button 
+                    onClick={() => {
+                      onLoginClick();
+                      setIsMobileOpen(false);
+                    }}
+                    className="w-full justify-center p-3 text-center text-sm font-mono text-gray-400 hover:text-white transition-colors font-semibold flex items-center gap-2"
+                  >
+                    <Terminal className="w-4 h-4 text-cyber-cyan" />
+                    Student Login
+                  </button>
+                  <GlowButton variant="gradient" onClick={onApplyClick} className="w-full text-sm">
+                    Apply Now (Standard Entry)
+                  </GlowButton>
+                </>
               )}
-              <GlowButton variant="gradient" onClick={onApplyClick} className="w-full text-sm">
-                Apply Now (Standard Entry)
-              </GlowButton>
             </div>
           </motion.div>
         )}
