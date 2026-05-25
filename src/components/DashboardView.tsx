@@ -522,37 +522,40 @@ export default function DashboardView({ user, onLoginClick, onLogout }: Dashboar
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
-              {BADGES.map((badge) => (
-                <div
-                  key={badge.id}
-                  onClick={() => badge.unlocked && setShowBadgeCelebration(badge.name)}
-                  className={`flex flex-col items-center text-center p-3.5 rounded-xl border transition-all duration-300 relative group cursor-pointer ${
-                    badge.unlocked
-                      ? 'bg-cyber-card/75 border-white/10 hover:border-indigo-500/40 hover:bg-cyber-card-bright/80 hover:shadow-[0_4px_15px_rgba(99,102,241,0.2)]'
-                      : 'bg-black/30 border-dashed border-white/5 opacity-40'
-                  }`}
-                >
+              {BADGES.map((badge) => {
+                const isUnlocked = activeUser.badges?.includes(badge.id);
+                return (
                   <div
-                    className="w-11 h-11 rounded-xl flex items-center justify-center mb-2.5 transition-all duration-300 group-hover:scale-110 shadow-inner"
-                    style={{
-                      backgroundColor: badge.unlocked ? `${badge.color}15` : '#111827',
-                      border: badge.unlocked ? `1px solid ${badge.color}35` : '1px solid rgba(255,255,255,0.05)',
-                      color: badge.unlocked ? badge.color : '#6B7280'
-                    }}
+                    key={badge.id}
+                    onClick={() => isUnlocked && setShowBadgeCelebration(badge.name)}
+                    className={`flex flex-col items-center text-center p-3.5 rounded-xl border transition-all duration-300 relative group cursor-pointer ${
+                      isUnlocked
+                        ? 'bg-cyber-card/75 border-white/10 hover:border-indigo-500/40 hover:bg-cyber-card-bright/80 hover:shadow-[0_4px_15px_rgba(99,102,241,0.2)]'
+                        : 'bg-black/30 border-dashed border-white/5 opacity-40'
+                    }`}
                   >
-                    {/* Render corresponding mock visual icon */}
-                    <Code className="w-5 h-5" />
-                  </div>
-                  
-                  <span className="block font-display text-xs font-semibold text-gray-200 truncate w-full">{badge.name}</span>
-                  <span className="block text-[8px] text-gray-500 mt-0.5 leading-tight">{badge.unlocked ? `${badge.xpValue} XP` : 'LOCKED'}</span>
+                    <div
+                      className="w-16 h-16 rounded-xl flex items-center justify-center mb-2 transition-all duration-300 group-hover:scale-110"
+                    >
+                      {/* Render live dynamic vector asset from backend! */}
+                      <img 
+                        src={`/api/assets/badge/${badge.id}.svg?userId=${activeUser.id}`}
+                        className={`w-full h-full object-contain ${!isUnlocked ? 'grayscale brightness-50' : ''}`}
+                        alt={badge.name}
+                        referrerPolicy="no-referrer"
+                      />
+                    </div>
+                    
+                    <span className="block font-display text-xs font-semibold text-gray-200 truncate w-full">{badge.name}</span>
+                    <span className="block text-[8px] text-gray-500 mt-0.5 leading-tight">{isUnlocked ? `${badge.xpValue} XP` : 'LOCKED'}</span>
 
-                  {/* Absolute locked pad indicator overlay */}
-                  {!badge.unlocked && (
-                    <span className="absolute inset-0 bg-transparent flex items-center justify-center rounded-xl" />
-                  )}
-                </div>
-              ))}
+                    {/* Absolute locked pad indicator overlay */}
+                    {!isUnlocked && (
+                      <span className="absolute inset-0 bg-transparent flex items-center justify-center rounded-xl" />
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </div>
 

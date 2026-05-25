@@ -2,197 +2,27 @@ import express from "express";
 import path from "path";
 import { createServer as createViteServer } from "vite";
 import mongoose from "mongoose";
+import { connectToDatabase, fallbackStore } from "./server/db";
+import { User, ProfileRequest, LoginAudit, Transaction } from "./server/models";
+import adminRouter from "./server/adminRoutes";
+import assetRouter from "./server/assetRoutes";
 
-// In-memory fallback fallback store in case MongoDB is not connected yet
-// ensures the preview/development environment never crashes and works instantly out-of-the-box.
-const fallbackStore = {
-  users: [
-    {
-      id: "demo-user",
-      email: "student@internforge.com",
-      password: "password123",
-      name: "Arjun Singh",
-      college: "BITS Pilani",
-      level: 14,
-      xp: 14250,
-      streak: 12,
-      completedNodes: ["w1-2"],
-      activeNodeId: "w3-5",
-      badges: ["b1", "b2", "b3"],
-      labsCompleted: 14,
-      purchasedPrograms: [] as string[]
-    },
-    {
-      id: "admin-user-2-mem",
-      email: "assistant.admin@internforge.com",
-      password: "adminforgepass",
-      name: "Assistant Administrator",
-      college: "InternForge HQ Office",
-      level: 99,
-      xp: 99999,
-      streak: 99,
-      completedNodes: [],
-      activeNodeId: "",
-      badges: ["b1", "b2", "b3"],
-      labsCompleted: 99,
-      purchasedPrograms: [] as string[]
-    }
-  ],
-  profileRequests: [
-    {
-      id: "req-1",
-      userId: "demo-user",
-      userEmail: "student@internforge.com",
-      currentName: "Arjun Singh",
-      currentCollege: "BITS Pilani",
-      requestedName: "Arjun Kumar Singh",
-      requestedCollege: "BITS Pilani (Rajasthan Campus)",
-      status: "pending",
-      createdAt: new Date().toISOString()
-    }
-  ] as any[],
-  loginAudits: [
-    {
-      id: "audit-1",
-      email: "student@internforge.com",
-      name: "Arjun Singh",
-      timestamp: new Date(Date.now() - 3600000).toISOString(),
-      provider: "credentials"
-    }
-  ] as any[],
-  transactions: [
-    {
-      id: "txn-1",
-      userId: "demo-user",
-      userEmail: "student@internforge.com",
-      userName: "Arjun Singh",
-      programId: "prog-fullstack",
-      programTitle: "Full-Stack Devops Cohort [Next.js + AWS]",
-      amount: 14999,
-      status: "success",
-      paymentGateway: "PhonePe",
-      timestamp: new Date(Date.now() - 172800000).toISOString()
-    },
-    {
-      id: "txn-2",
-      userId: "demo-user",
-      userEmail: "student@internforge.com",
-      userName: "Arjun Singh",
-      programId: "prog-quant",
-      programTitle: "High-Performance Quantitative Systems [Rust/C++]",
-      amount: 18450,
-      status: "failed",
-      paymentGateway: "Cashfree",
-      errorMessage: "Insufficient funds / Bank API timeout",
-      timestamp: new Date(Date.now() - 14400000).toISOString()
-    },
-    {
-      id: "txn-3",
-      userId: "demo-user",
-      userEmail: "student@internforge.com",
-      userName: "Arjun Singh",
-      programId: "prog-cyber",
-      programTitle: "Cybersecurity Red-Teaming & ISO 27001",
-      amount: 12500,
-      status: "failed",
-      paymentGateway: "PhonePe",
-      errorMessage: "UPI PIN validation limit exceeded",
-      timestamp: new Date(Date.now() - 86400000).toISOString()
-    },
-    {
-      id: "txn-4",
-      userId: "demo-user",
-      userEmail: "student@internforge.com",
-      userName: "Arjun Singh",
-      programId: "prog-fullstack",
-      programTitle: "Full-Stack Devops Cohort [Next.js + AWS]",
-      amount: 14999,
-      status: "success",
-      paymentGateway: "Cashfree",
-      timestamp: new Date(Date.now() - 3600000).toISOString()
-    }
-  ] as any[]
-};
-
-// ----------------------------------------------------
-// MongoDB Database Connection Setup
-// ----------------------------------------------------
-const MONGODB_URI = process.env.MONGODB_URI || "";
 let isMongoConnected = false;
 
-if (MONGODB_URI) {
-  console.log("Found MONGODB_URI. Attempting database connection...");
-  mongoose.connect(MONGODB_URI)
-    .then(() => {
-      console.log("Successfully connected to MongoDB backend!");
-      isMongoConnected = true;
-    })
-    .catch((err) => {
-      console.error("Mongoose connection warning (falling back to memory state):", err.message);
-    });
-} else {
-  console.log("No MONGODB_URI found in environment variables. Running in-memory schema fallback (ideal for sandbox/preview). To persist data permanently, add MONGODB_URI to your .env or platform variables.");
-}
-
-// ----------------------------------------------------
-// MongoDB Database Schemas and Models
-// ----------------------------------------------------
-const UserSchema = new mongoose.Schema({
-  email: { type: String, required: true, unique: true },
-  password: { type: String, required: true },
-  name: { type: String, required: true },
-  college: { type: String, default: "BITS Pilani" },
-  level: { type: Number, default: 14 },
-  xp: { type: Number, default: 14250 },
-  streak: { type: Number, default: 12 },
-  completedNodes: { type: [String], default: ["w1-2"] },
-  activeNodeId: { type: String, default: "w3-5" },
-  badges: { type: [String], default: ["b1", "b2", "b3"] },
-  labsCompleted: { type: Number, default: 14 },
-  purchasedPrograms: { type: [String], default: [] }
-}, { timestamps: true });
-
-const ProfileRequestSchema = new mongoose.Schema({
-  userId: { type: String, required: true },
-  userEmail: { type: String, required: true },
-  currentName: { type: String },
-  currentCollege: { type: String },
-  requestedName: { type: String },
-  requestedCollege: { type: String },
-  status: { type: String, default: "pending" } // pending, approved, rejected
-}, { timestamps: true });
-
-const LoginAuditSchema = new mongoose.Schema({
-  email: { type: String, required: true },
-  name: { type: String },
-  timestamp: { type: Date, default: Date.now },
-  provider: { type: String, default: "credentials" }
-}, { timestamps: true });
-
-const TransactionSchema = new mongoose.Schema({
-  userId: { type: String, required: true },
-  userEmail: { type: String, required: true },
-  userName: { type: String, required: true },
-  programId: { type: String, required: true },
-  programTitle: { type: String, required: true },
-  amount: { type: Number, required: true },
-  status: { type: String, required: true }, // "success" or "failed"
-  paymentGateway: { type: String, required: true }, // "PhonePe" or "Cashfree" or other
-  errorMessage: { type: String },
-  timestamp: { type: Date, default: Date.now }
-}, { timestamps: true });
-
-const User = (mongoose.models.User || mongoose.model("User", UserSchema)) as any;
-const ProfileRequest = (mongoose.models.ProfileRequest || mongoose.model("ProfileRequest", ProfileRequestSchema)) as any;
-const LoginAudit = (mongoose.models.LoginAudit || mongoose.model("LoginAudit", LoginAuditSchema)) as any;
-const Transaction = (mongoose.models.Transaction || mongoose.model("Transaction", TransactionSchema)) as any;
-
 async function startServer() {
+  // Establish database connection first
+  await connectToDatabase();
+  isMongoConnected = mongoose.connection.readyState === 1;
+
   const app = express();
   const PORT = 3000;
 
   // Middleware to parse payload parameters
   app.use(express.json());
+
+  // Mount modular route controllers
+  app.use("/api/admin", adminRouter);
+  app.use("/api/assets", assetRouter);
 
   // ----------------------------------------------------
   // Backend Authentication and Tracker API Endpoints
