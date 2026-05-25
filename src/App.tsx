@@ -38,6 +38,35 @@ export default function App() {
     }
   });
   const [isAuthOpen, setIsAuthOpen] = useState(false);
+  const [expandedFaqId, setExpandedFaqId] = useState<number | null>(null);
+
+  const faqs = [
+    {
+      id: 1,
+      question: "How does the hands-on hardware & compiler simulation work?",
+      answer: "We run actual low-level emulator environments inside a high-speed sandboxed container. You write standard hardware routines, load complex matrix variables, and run compiler sequences (e.g. ROS 2 joint configs, preemptive FreeRTOS scheduling models) entirely on-screen, without needing pricey physical hardware boards."
+    },
+    {
+      id: 2,
+      question: "Are the graduation certificates verified offline?",
+      answer: "Yes. Every completion certificate has an associated cryptographic authorization ID linked with a real database record. Anyone, including college administrators and hiring managers, can verify completion markers offline or via LinkedIn custom-printable vector PDF credentials."
+    },
+    {
+      id: 3,
+      question: "Do I need prior experience with embedded systems or AI before joining?",
+      answer: "No. Each specialized engineering track starts with fundamental sandbox simulations, expanding incrementally from basic variable declarations to full-fledged firmware kernels. We provide contextual tooltips, video instructions, and calendar synchronizations to keep you on track."
+    },
+    {
+      id: 4,
+      question: "When are the live sessions or mentor office hours scheduled?",
+      answer: "Office hours and interactive design loops are highly flexible. Enrolled students use our integrated calendar orchestration features to lock in direct 1-on-1 loops with professional hardware mentors, ensuring continuous reviews and resume audits."
+    },
+    {
+      id: 5,
+      question: "What is the fee structure and is there a refund policy?",
+      answer: "Each specialized internship program lists transparent micro-fees directly in the Programs view. If you decide the simulation sandbox doesn't align with your academic engineering path, you can coordinate quick support reversals with our secure National Gateway ledgers."
+    }
+  ];
 
   // Prevent accessing blog if logged in
   useEffect(() => {
@@ -85,6 +114,123 @@ export default function App() {
     window.addEventListener('hashchange', handleHashChange);
     return () => window.removeEventListener('hashchange', handleHashChange);
   }, []);
+
+  // Dynamic SEO Metadata updates & Google-compliant JSON-LD Structured Data Schema injections
+  useEffect(() => {
+    let titleStr = "InternForge | Premium Immersive Engineering Internship Labs";
+    let descStr = "Accelerate your engineering profession with InternForge. Access advanced sandbox simulation laboratory sequences in Autonomous Robotics, Edge ML, RTOS Firmware, and Distributed Systems with verified on-chain completion credentials.";
+    
+    switch (currentTab) {
+      case 'home':
+        titleStr = "InternForge | Premium Immersive Engineering Internship Labs";
+        break;
+      case 'programs':
+        titleStr = "Explore Programs & Curriculums | InternForge Specializations";
+        descStr = "Apply for structured cohorts including Autonomous Robotics, Edge ML compressions, Embedded RTOS firmware development, and Next.js scale system design.";
+        break;
+      case 'dashboard':
+        titleStr = `Dashboard | ${user ? user.name : 'Candidate Arena'} | InternForge`;
+        descStr = "Access your engineering portal. Run simulated tests, preview persistent experience metrics (XP), and verify compiler-level progress reports.";
+        break;
+      case 'track':
+        titleStr = "Engineering Path & Weekly Milestones | InternForge";
+        descStr = "Track detailed laboratory challenges, monitor firmware test suites, and coordinate graduation timeline sequences.";
+        break;
+      case 'certificate':
+        titleStr = "Verified Credentials & Graduation Certificates | InternForge";
+        descStr = "Verify corporate-grade cryptographic micro-credentials, download high-definition printable PDFs, and share instant verified references with recruiters.";
+        break;
+      case 'admin':
+        titleStr = "System Telemetry & Student Audit Panel | InternForge System Console";
+        descStr = "Verify enrolled user states, fast-track candidate graduations, reset specialized track parameters, and inspect simulated payment methods.";
+        break;
+      case 'blog':
+        titleStr = "Educational Insights & Tech Trends | InternForge Blog";
+        descStr = "Read original engineering whitepapers, real-time RTOS scheduling analyses, autonomous navigation tips, and career advancement blueprints.";
+        break;
+    }
+    
+    // Update Document Title
+    document.title = titleStr;
+    
+    // Update meta description
+    const metaDesc = document.querySelector('meta[name="description"]');
+    if (metaDesc) {
+      metaDesc.setAttribute('content', descStr);
+    }
+
+    // Set JSON-LD Schema to boost SEO categorization (Org, Brand & Course)
+    const existingSchema = document.getElementById('internforge-jsonld');
+    if (existingSchema) {
+      existingSchema.remove();
+    }
+
+    const schemaData = {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "Organization",
+          "@id": "https://internforge.com/#organization",
+          "name": "InternForge",
+          "url": "https://internforge.com",
+          "logo": "https://images.unsplash.com/photo-1581092918056-0c4c3acd3789?auto=format&fit=crop&w=400&q=80",
+          "description": "High-fidelity laboratory simulators enabling students to execute professional hardware firmware & cloud compilers in browser environments.",
+          "sameAs": [
+            "https://github.com/internforge",
+            "https://linkedin.com/company/internforge"
+          ]
+        },
+        {
+          "@type": "WebSite",
+          "@id": "https://internforge.com/#website",
+          "url": "https://internforge.com",
+          "name": "InternForge Labs",
+          "publisher": { "@id": "https://internforge.com/#organization" }
+        },
+        {
+          "@type": "FAQPage",
+          "@id": "https://internforge.com/#faq",
+          "mainEntity": [
+            {
+              "@type": "Question",
+              "name": "What is InternForge and how does the hands-on engineering internship simulation work?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "InternForge offers realistic, cloud-native sandbox environments for hardware-firmware and complex system designs. Students execute compiler scripts, design joint kinematics, and configure preemptive operating systems in-browser."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "Are the graduation certificates verified and recognized by recruiters?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Yes, every certificate has an associated unique ID and cryptographic authentication hash that can be instantly printed in high-fidelity PDF format or referenced on LinkedIn to confirm micro-credit completions."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "Do we need physical development boards like Arduino or Raspberry Pi?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "No, all laboratory sequences run on custom high-fidelity browser emulators. You write standard hardware routines, load configurations, and see live virtual outputs directly inside your student terminal workspace."
+              }
+            }
+          ]
+        }
+      ]
+    };
+
+    const script = document.createElement('script');
+    script.id = 'internforge-jsonld';
+    script.type = 'application/ld+json';
+    script.innerHTML = JSON.stringify(schemaData);
+    document.head.appendChild(script);
+
+    return () => {
+      const added = document.getElementById('internforge-jsonld');
+      if (added) added.remove();
+    };
+  }, [currentTab, user]);
 
   // Track Custom Trailing Cursor positioning
   useEffect(() => {
@@ -670,6 +816,71 @@ export default function App() {
                   <h3 className="font-display font-extrabold text-2xl text-white">Trust of India's Elite Engineering Cohorts</h3>
                 </div>
                 <TestimonialSlider />
+              </section>
+
+              {/* Interactive & Search Optimized FAQ Accordion Section */}
+              <section id="faq-section" className="py-20 px-4 sm:px-6 lg:px-8 max-w-4xl mx-auto select-none border-t border-white/5 mt-12">
+                <div className="text-center mb-12">
+                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/20 mb-3">
+                    <HelpCircle className="w-3.5 h-3.5 text-cyber-cyan" />
+                    <span className="text-[10px] sm:text-xs font-mono font-bold text-cyan-300 tracking-widest uppercase">FAQ_DIRECTORY</span>
+                  </div>
+                  <h3 className="font-display font-extrabold text-2.5xl sm:text-4xl text-white tracking-tight">
+                    Frequently Asked Questions
+                  </h3>
+                  <p className="text-xs sm:text-sm text-gray-450 mt-2 font-sans max-w-sm mx-auto">
+                    Quickly master the core mechanics of our immersive training pipelines and certification credentials.
+                  </p>
+                </div>
+
+                <div className="space-y-3.5 text-left font-sans">
+                  {faqs.map((faq) => {
+                    const isOpen = expandedFaqId === faq.id;
+                    return (
+                      <div 
+                        key={faq.id} 
+                        className={`rounded-xl border transition-all duration-300 overflow-hidden ${
+                          isOpen 
+                            ? 'bg-indigo-950/15 border-indigo-500/35 shadow-[0_0_20px_rgba(99,102,241,0.08)]' 
+                            : 'bg-black/30 border-white/5 hover:border-white/10 hover:bg-black/50'
+                        }`}
+                      >
+                        <button
+                          type="button"
+                          onClick={() => setExpandedFaqId(isOpen ? null : faq.id)}
+                          aria-expanded={isOpen}
+                          className="w-full flex justify-between items-center p-4 sm:p-5 text-left focus:outline-none cursor-pointer group"
+                        >
+                          <span className={`text-xs sm:text-sm font-bold tracking-tight transition-colors ${
+                            isOpen ? 'text-cyan-300' : 'text-gray-200 group-hover:text-white'
+                          }`}>
+                            {faq.question}
+                          </span>
+                          <span className={`ml-4 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-white/5 border border-white/10 text-gray-400 group-hover:text-white transition-all duration-300 ${
+                            isOpen ? 'rotate-180' : ''
+                          }`}>
+                            {isOpen ? '−' : '+'}
+                          </span>
+                        </button>
+                        
+                        <AnimatePresence initial={false}>
+                          {isOpen && (
+                            <motion.div
+                              initial={{ height: 0, opacity: 0 }}
+                              animate={{ height: 'auto', opacity: 1 }}
+                              exit={{ height: 0, opacity: 0 }}
+                              transition={{ duration: 0.25, ease: 'easeOut' }}
+                            >
+                              <div className="px-4 sm:px-5 pb-5 pt-0 text-[11.5px] sm:text-xs text-gray-400 leading-relaxed font-sans border-t border-white/[0.03]">
+                                <p>{faq.answer}</p>
+                              </div>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      </div>
+                    );
+                  })}
+                </div>
               </section>
 
               {/* Bottom Landing CTA */}
